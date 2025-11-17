@@ -120,16 +120,19 @@
             <h1>Products</h1>
         </header>
         
-        <button class="button" hx-get="/products" hx-target="#product-table-container" hx-swap="innerHTML">
-            Load Products
-        </button>
-        
-        <div id="product-table-container"></div>
+        <div style="margin-bottom: var(--wa-spacing-md);">
+            <button class="button" hx-get="/products?sortBy=id&order=asc&page=0&pageSize=10" hx-target="#product-table-container" hx-swap="innerHTML">
+                Load Products
+            </button>
+            <button class="button" id="toggle-form-btn" onclick="toggleForm()" style="margin-left: var(--wa-spacing-md);">
+                Add New Product
+            </button>
+        </div>
         
         <div id="product-form-container" style="display: none;">
             <div class="form-container">
                 <h2>Add New Product</h2>
-                <form hx-post="/products" hx-target="#product-table-container" hx-swap="innerHTML">
+                <form hx-post="/products?sortBy=id&order=asc&page=0&pageSize=10" hx-target="#product-table-container" hx-swap="innerHTML" onsubmit="resetForm()">
                     <div class="form-group">
                         <label for="title">Title *</label>
                         <input type="text" id="title" name="title" required>
@@ -146,12 +149,34 @@
                 </form>
             </div>
         </div>
+        
+        <div id="product-table-container"></div>
     </div>
     
     <script>
+        function toggleForm() {
+            const formContainer = document.getElementById('product-form-container');
+            const btn = document.getElementById('toggle-form-btn');
+            if (formContainer.style.display === 'none') {
+                formContainer.style.display = 'block';
+                btn.textContent = 'Hide Form';
+            } else {
+                formContainer.style.display = 'none';
+                btn.textContent = 'Add New Product';
+            }
+        }
+        
+        function resetForm() {
+            document.getElementById('product-form-container').style.display = 'none';
+            document.getElementById('toggle-form-btn').textContent = 'Add New Product';
+        }
+        
         document.body.addEventListener('htmx:afterSwap', function(event) {
-            if (event.detail.target.id === 'product-table-container' && event.detail.target.innerHTML.trim() !== '') {
-                document.getElementById('product-form-container').style.display = 'block';
+            if (event.detail.target.id === 'product-table-container') {
+                const form = document.querySelector('#product-form-container form');
+                if (form) {
+                    form.reset();
+                }
             }
         });
     </script>

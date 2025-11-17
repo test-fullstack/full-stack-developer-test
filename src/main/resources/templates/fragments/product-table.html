@@ -1,11 +1,78 @@
+<div style="margin-bottom: var(--wa-spacing-md);">
+    <label for="pageSize" style="margin-right: var(--wa-spacing-md);">Items per page:</label>
+    <select id="pageSize" 
+            th:value="${pageSize}"
+            onchange="changePageSize(this.value)"
+            style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+        <option value="10">10</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+    </select>
+</div>
+
 <table>
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Price</th>
-            <th>Vendor</th>
-            <th>Created</th>
+            <th>
+                <a href="#" 
+                   th:hx-get="@{/products(sortBy='id', order=${(sortBy == 'id' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
+                   hx-target="#product-table-container" 
+                   hx-swap="innerHTML"
+                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                    ID
+                    <span th:if="${sortBy == 'id'}">
+                        <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a href="#" 
+                   th:hx-get="@{/products(sortBy='title', order=${(sortBy == 'title' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
+                   hx-target="#product-table-container" 
+                   hx-swap="innerHTML"
+                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                    Title
+                    <span th:if="${sortBy == 'title'}">
+                        <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a href="#" 
+                   th:hx-get="@{/products(sortBy='price', order=${(sortBy == 'price' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
+                   hx-target="#product-table-container" 
+                   hx-swap="innerHTML"
+                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                    Price
+                    <span th:if="${sortBy == 'price'}">
+                        <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a href="#" 
+                   th:hx-get="@{/products(sortBy='vendor', order=${(sortBy == 'vendor' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
+                   hx-target="#product-table-container" 
+                   hx-swap="innerHTML"
+                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                    Vendor
+                    <span th:if="${sortBy == 'vendor'}">
+                        <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
+                    </span>
+                </a>
+            </th>
+            <th>
+                <a href="#" 
+                   th:hx-get="@{/products(sortBy='created_at', order=${(sortBy == 'created_at' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
+                   hx-target="#product-table-container" 
+                   hx-swap="innerHTML"
+                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                    Created
+                    <span th:if="${sortBy == 'created_at'}">
+                        <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
+                    </span>
+                </a>
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -18,4 +85,43 @@
         </tr>
     </tbody>
 </table>
+
+<div style="margin-top: var(--wa-spacing-lg); display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <span th:text="'Showing ' + ${page * pageSize + 1} + ' to ' + ${(page + 1) * pageSize > totalCount ? totalCount : (page + 1) * pageSize} + ' of ' + ${totalCount} + ' products'"></span>
+    </div>
+    <div style="display: flex; gap: var(--wa-spacing-md); align-items: center;">
+        <button class="button" 
+                th:disabled="${page == 0}"
+                th:hx-get="${page > 0 ? @{/products(sortBy=${sortBy}, order=${order}, page=${page - 1}, pageSize=${pageSize})} : '#'}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML"
+                th:style="${page == 0} ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+                style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+            Previous
+        </button>
+        <span th:text="'Page ' + ${page + 1} + ' of ' + ${totalPages}"></span>
+        <button class="button"
+                th:disabled="${page >= totalPages - 1}"
+                th:hx-get="${page < totalPages - 1 ? @{/products(sortBy=${sortBy}, order=${order}, page=${page + 1}, pageSize=${pageSize})} : '#'}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML"
+                th:style="${page >= totalPages - 1} ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+                style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+            Next
+        </button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    function changePageSize(newSize) {
+        const sortBy = /*[[${sortBy}]]*/ 'id';
+        const order = /*[[${order}]]*/ 'asc';
+        const url = '/products?sortBy=' + sortBy + '&order=' + order + '&page=0&pageSize=' + newSize;
+        htmx.ajax('GET', url, {
+            target: '#product-table-container',
+            swap: 'innerHTML'
+        });
+    }
+</script>
 

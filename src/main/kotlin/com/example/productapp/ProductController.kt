@@ -14,8 +14,23 @@ class ProductController(private val productService: ProductService) {
     }
 
     @GetMapping("/products")
-    fun getProducts(model: Model): String {
-        model.addAttribute("products", productService.findAll())
+    fun getProducts(
+        @RequestParam(required = false, defaultValue = "id") sortBy: String,
+        @RequestParam(required = false, defaultValue = "asc") order: String,
+        @RequestParam(required = false, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "10") pageSize: Int,
+        model: Model
+    ): String {
+        val (products, totalCount) = productService.findAll(sortBy, order, page, pageSize)
+        val totalPages = (totalCount + pageSize - 1) / pageSize
+        
+        model.addAttribute("products", products)
+        model.addAttribute("sortBy", sortBy)
+        model.addAttribute("order", order)
+        model.addAttribute("page", page)
+        model.addAttribute("pageSize", pageSize)
+        model.addAttribute("totalCount", totalCount)
+        model.addAttribute("totalPages", totalPages)
         return "fragments/product-table"
     }
 
@@ -24,6 +39,10 @@ class ProductController(private val productService: ProductService) {
         @RequestParam title: String,
         @RequestParam(required = false) price: String?,
         @RequestParam(required = false) vendor: String?,
+        @RequestParam(required = false, defaultValue = "id") sortBy: String,
+        @RequestParam(required = false, defaultValue = "asc") order: String,
+        @RequestParam(required = false, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "10") pageSize: Int,
         model: Model
     ): String {
         val productPrice = if (price.isNullOrBlank()) null else try {
@@ -40,7 +59,16 @@ class ProductController(private val productService: ProductService) {
         )
 
         productService.save(product)
-        model.addAttribute("products", productService.findAll())
+        val (products, totalCount) = productService.findAll(sortBy, order, page, pageSize)
+        val totalPages = (totalCount + pageSize - 1) / pageSize
+        
+        model.addAttribute("products", products)
+        model.addAttribute("sortBy", sortBy)
+        model.addAttribute("order", order)
+        model.addAttribute("page", page)
+        model.addAttribute("pageSize", pageSize)
+        model.addAttribute("totalCount", totalCount)
+        model.addAttribute("totalPages", totalPages)
         return "fragments/product-table"
     }
 }

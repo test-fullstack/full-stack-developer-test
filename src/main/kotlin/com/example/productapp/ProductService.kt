@@ -8,8 +8,17 @@ import java.math.BigDecimal
 class ProductService(
     private val jdbcClient: JdbcClient
 ) {
-    fun findAll(): List<Product> {
-        return jdbcClient.sql("SELECT id, title, price, vendor, variants, created_at FROM products ORDER BY created_at DESC")
+    fun findAll(sortBy: String = "id", order: String = "asc", page: Int = 0, pageSize: Int = 10): Pair<List<Product>, Int> {
+        val validSortColumns = setOf("id", "title", "price", "vendor", "created_at")
+        val sortColumn = if (validSortColumns.contains(sortBy.lowercase())) sortBy.lowercase() else "id"
+        val sortOrder = if (order.lowercase() == "desc") "DESC" else "ASC"
+        val offset = page * pageSize
+        
+        val sql = "SELECT id, title, price, vendor, variants, created_at FROM products ORDER BY $sortColumn $sortOrder LIMIT ? OFFSET ?"
+        
+        val products = jdbcClient.sql(sql)
+            .param(pageSize)
+            .param(offset)
             .query { rs, _ ->
                 Product(
                     id = rs.getLong("id"),
@@ -21,6 +30,12 @@ class ProductService(
                 )
             }
             .list()
+        
+        val totalCount = jdbcClient.sql("SELECT COUNT(*) FROM products")
+            .query(Int::class.java)
+            .single()
+        
+        return Pair(products, totalCount)
     }
 
     fun save(product: Product): Long {
