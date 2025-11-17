@@ -179,6 +179,21 @@
                 }
             }
         });
+        
+        document.body.addEventListener('change', function(event) {
+            if (event.target && event.target.id === 'pageSize') {
+                const select = event.target;
+                const sortBy = select.getAttribute('data-sort-by') || 'id';
+                const order = select.getAttribute('data-order') || 'asc';
+                const newSize = select.value;
+                const url = '/products?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
+                
+                htmx.ajax('GET', url, {
+                    target: '#product-table-container',
+                    swap: 'innerHTML'
+                });
+            }
+        });
     </script>
 </body>
 </html>

@@ -1,12 +1,11 @@
 <div style="margin-bottom: var(--wa-spacing-md);">
     <label for="pageSize" style="margin-right: var(--wa-spacing-md);">Items per page:</label>
     <select id="pageSize" 
-            th:value="${pageSize}"
-            onchange="changePageSize(this.value)"
+            th:attr="data-sort-by=${sortBy}, data-order=${order}"
             style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
-        <option value="10">10</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
+        <option value="10" th:selected="${pageSize == 10}">10</option>
+        <option value="50" th:selected="${pageSize == 50}">50</option>
+        <option value="100" th:selected="${pageSize == 100}">100</option>
     </select>
 </div>
 
@@ -92,36 +91,33 @@
     </div>
     <div style="display: flex; gap: var(--wa-spacing-md); align-items: center;">
         <button class="button" 
-                th:disabled="${page == 0}"
-                th:hx-get="${page > 0 ? @{/products(sortBy=${sortBy}, order=${order}, page=${page - 1}, pageSize=${pageSize})} : '#'}"
+                th:if="${page > 0}"
+                th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${page - 1}, pageSize=${pageSize})}"
                 hx-target="#product-table-container"
                 hx-swap="innerHTML"
-                th:style="${page == 0} ? 'opacity: 0.5; cursor: not-allowed;' : ''"
                 style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+            Previous
+        </button>
+        <button class="button" 
+                th:if="${page == 0}"
+                disabled
+                style="padding: 0.5rem 1rem; font-size: 0.9rem; opacity: 0.5; cursor: not-allowed;">
             Previous
         </button>
         <span th:text="'Page ' + ${page + 1} + ' of ' + ${totalPages}"></span>
         <button class="button"
-                th:disabled="${page >= totalPages - 1}"
-                th:hx-get="${page < totalPages - 1 ? @{/products(sortBy=${sortBy}, order=${order}, page=${page + 1}, pageSize=${pageSize})} : '#'}"
+                th:if="${page < totalPages - 1}"
+                th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${page + 1}, pageSize=${pageSize})}"
                 hx-target="#product-table-container"
                 hx-swap="innerHTML"
-                th:style="${page >= totalPages - 1} ? 'opacity: 0.5; cursor: not-allowed;' : ''"
                 style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+            Next
+        </button>
+        <button class="button"
+                th:if="${page >= totalPages - 1}"
+                disabled
+                style="padding: 0.5rem 1rem; font-size: 0.9rem; opacity: 0.5; cursor: not-allowed;">
             Next
         </button>
     </div>
 </div>
-
-<script th:inline="javascript">
-    function changePageSize(newSize) {
-        const sortBy = /*[[${sortBy}]]*/ 'id';
-        const order = /*[[${order}]]*/ 'asc';
-        const url = '/products?sortBy=' + sortBy + '&order=' + order + '&page=0&pageSize=' + newSize;
-        htmx.ajax('GET', url, {
-            target: '#product-table-container',
-            swap: 'innerHTML'
-        });
-    }
-</script>
-
