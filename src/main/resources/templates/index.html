@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@webawesome/webawesome@1.0.0/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <style>
+        :root {
+            --wa-color-primary: #0066cc;
+            --wa-color-success: #28a745;
+            --wa-spacing-md: 1rem;
+            --wa-spacing-lg: 1.5rem;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: var(--wa-spacing-lg);
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: var(--wa-spacing-lg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            margin-bottom: var(--wa-spacing-lg);
+            padding-bottom: var(--wa-spacing-md);
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        h1 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .button {
+            background-color: var(--wa-color-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: var(--wa-spacing-lg);
+        }
+        
+        .button:hover {
+            background-color: #0052a3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--wa-spacing-lg);
+        }
+        
+        th, td {
+            padding: var(--wa-spacing-md);
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .form-container {
+            margin-top: var(--wa-spacing-lg);
+            padding: var(--wa-spacing-lg);
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .form-group {
+            margin-bottom: var(--wa-spacing-md);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .button-success {
+            background-color: var(--wa-color-success);
+        }
+        
+        .button-success:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Products</h1>
+        </header>
+        
+        <button class="button" hx-get="/products" hx-target="#product-table-container" hx-swap="innerHTML">
+            Load Products
+        </button>
+        
+        <div id="product-table-container"></div>
+        
+        <div id="product-form-container" style="display: none;">
+            <div class="form-container">
+                <h2>Add New Product</h2>
+                <form hx-post="/products" hx-target="#product-table-container" hx-swap="innerHTML">
+                    <div class="form-group">
+                        <label for="title">Title *</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="price">Price</label>
+                        <input type="number" id="price" name="price" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor">Vendor</label>
+                        <input type="text" id="vendor" name="vendor">
+                    </div>
+                    <button type="submit" class="button button-success">Add Product</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'product-table-container' && event.detail.target.innerHTML.trim() !== '') {
+                document.getElementById('product-form-container').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+
