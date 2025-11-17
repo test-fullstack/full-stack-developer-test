@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Products</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@webawesome/webawesome@1.0.0/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <style>
+        :root {
+            --wa-color-primary: #0066cc;
+            --wa-color-success: #28a745;
+            --wa-spacing-md: 1rem;
+            --wa-spacing-lg: 1.5rem;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: var(--wa-spacing-lg);
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: var(--wa-spacing-lg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            margin-bottom: var(--wa-spacing-lg);
+            padding-bottom: var(--wa-spacing-md);
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        h1 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .button {
+            background-color: var(--wa-color-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: var(--wa-spacing-lg);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .button:hover {
+            background-color: #0052a3;
+        }
+        
+        .search-box {
+            margin-bottom: var(--wa-spacing-lg);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--wa-spacing-lg);
+        }
+        
+        th, td {
+            padding: var(--wa-spacing-md);
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .button-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .button-delete:hover {
+            background-color: #c82333;
+        }
+        
+        dialog {
+            border: none;
+            border-radius: 8px;
+            padding: var(--wa-spacing-lg);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 400px;
+        }
+        
+        dialog::backdrop {
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .dialog-content {
+            margin-bottom: var(--wa-spacing-lg);
+        }
+        
+        .dialog-buttons {
+            display: flex;
+            gap: var(--wa-spacing-md);
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Search Products</h1>
+            <a href="/" class="button" style="margin-top: var(--wa-spacing-md);">Back to Products</a>
+        </header>
+        
+        <div class="search-box">
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input" 
+                   placeholder="Search products by title..."
+                   hx-get="/products/search"
+                   hx-target="#product-table-container"
+                   hx-swap="innerHTML"
+                   hx-trigger="keyup changed delay:300ms"
+                   name="query">
+        </div>
+        
+        <div id="product-table-container"></div>
+    </div>
+    
+    <dialog id="deleteDialog">
+        <div class="dialog-content">
+            <h3>Delete Product</h3>
+            <p>Are you sure you want to delete "<span id="deleteProductTitle"></span>"?</p>
+            <p style="color: #dc3545; font-size: 0.9rem;">This action cannot be undone.</p>
+        </div>
+        <div class="dialog-buttons">
+            <button class="button" onclick="document.getElementById('deleteDialog').close()">Cancel</button>
+            <form id="deleteForm" method="post" style="display: inline;">
+                <button type="submit" class="button" style="background-color: #dc3545;">Delete</button>
+            </form>
+        </div>
+    </dialog>
+    
+    <script>
+        function showDeleteDialog(button) {
+            const productId = button.getAttribute('data-product-id');
+            const productTitle = button.getAttribute('data-product-title');
+            const dialog = document.getElementById('deleteDialog');
+            const form = document.getElementById('deleteForm');
+            
+            document.getElementById('deleteProductTitle').textContent = productTitle;
+            
+            const container = document.getElementById('product-table-container');
+            const select = container ? container.querySelector('#pageSize') : null;
+            const sortBy = select ? select.getAttribute('data-sort-by') || 'id' : 'id';
+            const order = select ? select.getAttribute('data-order') || 'asc' : 'asc';
+            const pageSize = select ? select.value || '10' : '10';
+            const query = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+            
+            const deleteUrl = '/products/' + productId + '/delete?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(pageSize);
+            
+            form.action = deleteUrl;
+            form.setAttribute('hx-post', deleteUrl);
+            form.setAttribute('hx-target', '#product-table-container');
+            form.setAttribute('hx-swap', 'innerHTML');
+            
+            dialog.showModal();
+        }
+        
+        document.body.addEventListener('submit', function(e) {
+            if (e.target.id === 'deleteForm') {
+                e.preventDefault();
+                const form = e.target;
+                htmx.ajax('POST', form.action, {
+                    target: '#product-table-container',
+                    swap: 'innerHTML'
+                });
+                document.getElementById('deleteDialog').close();
+                
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && searchInput.value) {
+                    setTimeout(() => {
+                        htmx.trigger(searchInput, 'input');
+                    }, 100);
+                }
+            }
+        });
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            htmx.ajax('GET', '/products/search?query=&sortBy=id&order=asc&page=0&pageSize=10', {
+                target: '#product-table-container',
+                swap: 'innerHTML'
+            });
+        });
+    </script>
+</body>
+</html>
+

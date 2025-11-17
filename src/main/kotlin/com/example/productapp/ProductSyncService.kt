@@ -1,7 +1,6 @@
 package com.example.productapp
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.net.URI
@@ -15,60 +14,64 @@ class ProductSyncService(
     private val objectMapper: ObjectMapper
 ) {
     private val httpClient = HttpClient.newHttpClient()
-    private val maxProducts = 50
 
-    @Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
-    fun syncProducts() {
+    fun syncProductsFromApi() {
         try {
             val request = HttpRequest.newBuilder()
-                .uri(URI.create("https://famme.no/products.json"))
+                .uri(URI.create("https://famme.no/products.json?limit=250"))
                 .GET()
                 .build()
 
             val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
             val json = objectMapper.readTree(response.body())
             val products = json.get("products")
-
+            
             if (products != null && products.isArray) {
-                var saved = 0
+                val totalProducts = products.size()
+                var savedCount = 0
+                var errorCount = 0
+                
                 for (productNode in products) {
-                    if (saved >= maxProducts) break
+                    try {
+                        val title = productNode.get("title")?.asText() ?: continue
+                        val vendor = productNode.get("vendor")?.asText()
+                        val variants = productNode.get("variants")
 
-                    val title = productNode.get("title")?.asText() ?: continue
-                    val vendor = productNode.get("vendor")?.asText()
-                    val variants = productNode.get("variants")
+                        val firstVariant = if (variants != null && variants.isArray && variants.size() > 0) {
+                            variants.get(0)
+                        } else null
 
-                    val firstVariant = if (variants != null && variants.isArray && variants.size() > 0) {
-                        variants.get(0)
-                    } else null
+                        val priceStr = firstVariant?.get("price")?.asText()
+                        val price = if (priceStr != null) {
+                            try {
+                                BigDecimal(priceStr)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        } else null
 
-                    val priceStr = firstVariant?.get("price")?.asText()
-                    val price = if (priceStr != null) {
-                        try {
-                            BigDecimal(priceStr)
-                        } catch (e: Exception) {
-                            null
-                        }
-                    } else null
+                        val variantsJson = if (variants != null) {
+                            objectMapper.writeValueAsString(variants)
+                        } else "[]"
 
-                    val variantsJson = if (variants != null) {
-                        objectMapper.writeValueAsString(variants)
-                    } else "[]"
+                        val product = Product(
+                            title = title,
+                            price = price,
+                            vendor = vendor,
+                            variants = variantsJson
+                        )
 
-                    val product = Product(
-                        title = title,
-                        price = price,
-                        vendor = vendor,
-                        variants = variantsJson
-                    )
-
-                    productService.save(product)
-                    saved++
+                        productService.save(product)
+                        savedCount++
+                    } catch (e: Exception) {
+                        errorCount++
+                        e.printStackTrace()
+                    }
                 }
+                println("Total products in API: $totalProducts, Successfully saved: $savedCount, Errors: $errorCount")
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 }
-

@@ -72,6 +72,7 @@
                     </span>
                 </a>
             </th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -81,6 +82,18 @@
             <td th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 2) : '-'}"></td>
             <td th:text="${product.vendor ?: '-'}"></td>
             <td th:text="${product.createdAt != null ? #temporals.format(product.createdAt, 'yyyy-MM-dd HH:mm') : '-'}"></td>
+            <td>
+                <a th:href="@{/products/{id}/edit(id=${product.id})}" 
+                   style="color: var(--wa-color-primary); text-decoration: none; margin-right: var(--wa-spacing-md);">
+                    Edit
+                </a>
+                <button class="button-delete" 
+                        th:attr="data-product-id=${product.id}, data-product-title=${product.title}"
+                        onclick="showDeleteDialog(this)"
+                        style="background-color: #dc3545; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                    Delete
+                </button>
+            </td>
         </tr>
     </tbody>
 </table>
@@ -121,3 +134,83 @@
         </button>
     </div>
 </div>
+
+<dialog id="deleteDialog">
+    <div style="margin-bottom: var(--wa-spacing-lg);">
+        <h3 style="margin-top: 0;">Delete Product</h3>
+        <p>Are you sure you want to delete "<span id="deleteProductTitle"></span>"?</p>
+        <p style="color: #dc3545; font-size: 0.9rem;">This action cannot be undone.</p>
+    </div>
+    <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
+        <button class="button" onclick="document.getElementById('deleteDialog').close()" style="background-color: #6c757d;">Cancel</button>
+        <form id="deleteForm" method="post" style="display: inline;">
+            <button type="submit" class="button" style="background-color: #dc3545;">Delete</button>
+        </form>
+    </div>
+</dialog>
+
+<script>
+    function showDeleteDialog(button) {
+        const productId = button.getAttribute('data-product-id');
+        const productTitle = button.getAttribute('data-product-title');
+        const dialog = document.getElementById('deleteDialog');
+        const form = document.getElementById('deleteForm');
+        
+        document.getElementById('deleteProductTitle').textContent = productTitle;
+        
+        const container = document.getElementById('product-table-container');
+        const select = container ? container.querySelector('#pageSize') : null;
+        const sortBy = select ? select.getAttribute('data-sort-by') || 'id' : 'id';
+        const order = select ? select.getAttribute('data-order') || 'asc' : 'asc';
+        const pageSize = select ? select.value || '10' : '10';
+        
+        const deleteUrl = '/products/' + productId + '/delete?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(pageSize);
+        
+        form.action = deleteUrl;
+        form.setAttribute('hx-post', deleteUrl);
+        form.setAttribute('hx-target', '#product-table-container');
+        form.setAttribute('hx-swap', 'innerHTML');
+        
+        dialog.showModal();
+    }
+    
+    document.body.addEventListener('submit', function(e) {
+        if (e.target.id === 'deleteForm') {
+            e.preventDefault();
+            const form = e.target;
+            htmx.ajax('POST', form.action, {
+                target: '#product-table-container',
+                swap: 'innerHTML'
+            });
+            document.getElementById('deleteDialog').close();
+        }
+    });
+</script>
+
+<style>
+    dialog {
+        border: none;
+        border-radius: 8px;
+        padding: var(--wa-spacing-lg);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        max-width: 400px;
+    }
+    
+    dialog::backdrop {
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .button-delete {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .button-delete:hover {
+        background-color: #c82333;
+    }
+</style>

@@ -121,12 +121,15 @@
         </header>
         
         <div style="margin-bottom: var(--wa-spacing-md);">
-            <button class="button" hx-get="/products?sortBy=id&order=asc&page=0&pageSize=10" hx-target="#product-table-container" hx-swap="innerHTML">
+            <button class="button" id="load-products-btn" hx-post="/products/load" hx-target="#product-table-container" hx-swap="innerHTML">
                 Load Products
             </button>
             <button class="button" id="toggle-form-btn" onclick="toggleForm()" style="margin-left: var(--wa-spacing-md);">
                 Add New Product
             </button>
+            <a href="/search" class="button" style="margin-left: var(--wa-spacing-md); text-decoration: none; display: inline-block;">
+                Search Products
+            </a>
         </div>
         
         <div id="product-form-container" style="display: none;">
@@ -150,7 +153,10 @@
             </div>
         </div>
         
-        <div id="product-table-container"></div>
+        <div id="product-table-container" 
+             th:attr="hx-get=${hasProducts ? '/products?sortBy=id&order=asc&page=0&pageSize=10' : null},
+                      hx-trigger=${hasProducts ? 'load' : null},
+                      hx-swap=${hasProducts ? 'innerHTML' : null}"></div>
     </div>
     
     <script>
@@ -194,7 +200,16 @@
                 });
             }
         });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const hasProducts = /*[[${hasProducts}]]*/ false;
+            if (hasProducts) {
+                htmx.ajax('GET', '/products?sortBy=id&order=asc&page=0&pageSize=10', {
+                    target: '#product-table-container',
+                    swap: 'innerHTML'
+                });
+            }
+        });
     </script>
 </body>
 </html>
-
