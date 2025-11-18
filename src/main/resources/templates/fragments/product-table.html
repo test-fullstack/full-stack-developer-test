@@ -149,6 +149,16 @@
     </div>
 </dialog>
 
+<dialog id="deleteSuccessDialog">
+    <div style="margin-bottom: var(--wa-spacing-lg);">
+        <h3 style="margin-top: 0; color: var(--wa-color-success);">Success</h3>
+        <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
+    </div>
+    <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
+        <button class="button" onclick="document.getElementById('deleteSuccessDialog').close()" style="background-color: var(--wa-color-primary);">OK</button>
+    </div>
+</dialog>
+
 <script>
     function showDeleteDialog(button) {
         const productId = button.getAttribute('data-product-id');
@@ -178,11 +188,17 @@
         if (e.target.id === 'deleteForm') {
             e.preventDefault();
             const form = e.target;
+            const deletedTitle = document.getElementById('deleteProductTitle').textContent;
+            
             htmx.ajax('POST', form.action, {
                 target: '#product-table-container',
-                swap: 'innerHTML'
+                swap: 'innerHTML',
+                onSuccess: function() {
+                    document.getElementById('deleteDialog').close();
+                    document.getElementById('deletedProductTitle').textContent = deletedTitle;
+                    document.getElementById('deleteSuccessDialog').showModal();
+                }
             });
-            document.getElementById('deleteDialog').close();
         }
     });
 </script>
@@ -197,6 +213,18 @@
     }
     
     dialog::backdrop {
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    #deleteSuccessDialog {
+        border: none;
+        border-radius: 8px;
+        padding: var(--wa-spacing-lg);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        max-width: 400px;
+    }
+    
+    #deleteSuccessDialog::backdrop {
         background-color: rgba(0,0,0,0.5);
     }
     

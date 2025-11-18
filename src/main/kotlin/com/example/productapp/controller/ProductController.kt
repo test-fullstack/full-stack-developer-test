@@ -105,7 +105,7 @@ class ProductController(
     
     @GetMapping("/search")
     fun searchPage(model: Model): String {
-        return "search"
+        return "fragments/search"
     }
     
     @GetMapping("/products/search")
@@ -142,7 +142,7 @@ class ProductController(
             return "redirect:/"
         }
         model.addAttribute("product", product)
-        return "edit-product"
+        return "fragments/edit-product"
     }
     
     @PostMapping("/products/{id}/update")

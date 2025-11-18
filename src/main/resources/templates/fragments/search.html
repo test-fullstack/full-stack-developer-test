@@ -119,6 +119,18 @@
             background-color: rgba(0,0,0,0.5);
         }
         
+        #deleteSuccessDialog {
+            border: none;
+            border-radius: 8px;
+            padding: var(--wa-spacing-lg);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 400px;
+        }
+        
+        #deleteSuccessDialog::backdrop {
+            background-color: rgba(0,0,0,0.5);
+        }
+        
         .dialog-content {
             margin-bottom: var(--wa-spacing-lg);
         }
@@ -166,6 +178,16 @@
         </div>
     </dialog>
     
+    <dialog id="deleteSuccessDialog">
+        <div class="dialog-content">
+            <h3 style="color: var(--wa-color-success);">Success</h3>
+            <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
+        </div>
+        <div class="dialog-buttons">
+            <button class="button" onclick="document.getElementById('deleteSuccessDialog').close()" style="background-color: var(--wa-color-primary);">OK</button>
+        </div>
+    </dialog>
+    
     <script>
         function showDeleteDialog(button) {
             const productId = button.getAttribute('data-product-id');
@@ -196,18 +218,24 @@
             if (e.target.id === 'deleteForm') {
                 e.preventDefault();
                 const form = e.target;
+                const deletedTitle = document.getElementById('deleteProductTitle').textContent;
+                
                 htmx.ajax('POST', form.action, {
                     target: '#product-table-container',
-                    swap: 'innerHTML'
+                    swap: 'innerHTML',
+                    onSuccess: function() {
+                        document.getElementById('deleteDialog').close();
+                        document.getElementById('deletedProductTitle').textContent = deletedTitle;
+                        document.getElementById('deleteSuccessDialog').showModal();
+                        
+                        const searchInput = document.getElementById('searchInput');
+                        if (searchInput && searchInput.value) {
+                            setTimeout(() => {
+                                htmx.trigger(searchInput, 'input');
+                            }, 100);
+                        }
+                    }
                 });
-                document.getElementById('deleteDialog').close();
-                
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput && searchInput.value) {
-                    setTimeout(() => {
-                        htmx.trigger(searchInput, 'input');
-                    }, 100);
-                }
             }
         });
     </script>
