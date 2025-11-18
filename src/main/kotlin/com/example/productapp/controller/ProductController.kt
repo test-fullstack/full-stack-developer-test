@@ -1,5 +1,8 @@
-package com.example.productapp
+package com.example.productapp.controller
 
+import com.example.productapp.dto.Product
+import com.example.productapp.repository.ProductRepository
+import com.example.productapp.service.ProductSyncService
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -9,12 +12,12 @@ import org.springframework.web.bind.annotation.PathVariable
 
 @Controller
 class ProductController(
-    private val productService: ProductService,
+    private val productRepository: ProductRepository,
     private val productSyncService: ProductSyncService
 ) {
     @GetMapping("/")
     fun index(model: Model): String {
-        val productCount = productService.count()
+        val productCount = productRepository.count()
         model.addAttribute("hasProducts", productCount > 0)
         return "index"
     }
@@ -27,7 +30,7 @@ class ProductController(
         @RequestParam(required = false, defaultValue = "10") pageSize: Int,
         model: Model
     ): String {
-        val (products, totalCount) = productService.findAll(sortBy, order, page, pageSize)
+        val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         val totalPages = (totalCount + pageSize - 1) / pageSize
         
         model.addAttribute("products", products)
@@ -49,7 +52,7 @@ class ProductController(
         model: Model
     ): String {
         productSyncService.syncProductsFromApi()
-        val (products, totalCount) = productService.findAll(sortBy, order, page, pageSize)
+        val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         val totalPages = (totalCount + pageSize - 1) / pageSize
         
         model.addAttribute("products", products)
@@ -86,8 +89,8 @@ class ProductController(
             variants = "[]"
         )
 
-        productService.save(product)
-        val (products, totalCount) = productService.findAll(sortBy, order, page, pageSize)
+        productRepository.save(product)
+        val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         val totalPages = (totalCount + pageSize - 1) / pageSize
         
         model.addAttribute("products", products)
@@ -115,9 +118,9 @@ class ProductController(
         model: Model
     ): String {
         val (products, totalCount) = if (query.isBlank()) {
-            productService.findAll(sortBy, order, page, pageSize)
+            productRepository.findAll(sortBy, order, page, pageSize)
         } else {
-            productService.searchByTitle(query, sortBy, order, page, pageSize)
+            productRepository.searchByTitle(query, sortBy, order, page, pageSize)
         }
         val totalPages = (totalCount + pageSize - 1) / pageSize
         
@@ -134,7 +137,7 @@ class ProductController(
     
     @GetMapping("/products/{id}/edit")
     fun editProduct(@PathVariable id: Long, model: Model): String {
-        val product = productService.findById(id)
+        val product = productRepository.findById(id)
         if (product == null) {
             return "redirect:/"
         }
@@ -164,7 +167,7 @@ class ProductController(
             variants = "[]"
         )
         
-        productService.update(product)
+        productRepository.update(product)
         return "redirect:/"
     }
     
@@ -177,8 +180,8 @@ class ProductController(
         @RequestParam(required = false, defaultValue = "10") pageSize: Int,
         model: Model
     ): String {
-        productService.delete(id)
-        val (products, totalCount) = productService.findAll(sortBy, order, page, pageSize)
+        productRepository.delete(id)
+        val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         val totalPages = (totalCount + pageSize - 1) / pageSize
         
         model.addAttribute("products", products)

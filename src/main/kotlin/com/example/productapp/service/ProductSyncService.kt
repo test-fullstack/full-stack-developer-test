@@ -1,5 +1,7 @@
-package com.example.productapp
+package com.example.productapp.service
 
+import com.example.productapp.dto.Product
+import com.example.productapp.repository.ProductRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -10,7 +12,7 @@ import java.net.http.HttpResponse
 
 @Service
 class ProductSyncService(
-    private val productService: ProductService,
+    private val productRepository: ProductRepository,
     private val objectMapper: ObjectMapper
 ) {
     private val httpClient = HttpClient.newHttpClient()
@@ -61,7 +63,7 @@ class ProductSyncService(
                             variants = variantsJson
                         )
 
-                        productService.save(product)
+                        productRepository.save(product)
                         savedCount++
                     } catch (e: Exception) {
                         errorCount++
@@ -75,3 +77,4 @@ class ProductSyncService(
         }
     }
 }
+

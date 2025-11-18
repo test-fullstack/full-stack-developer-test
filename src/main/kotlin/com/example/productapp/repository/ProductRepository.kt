@@ -1,11 +1,12 @@
-package com.example.productapp
+package com.example.productapp.repository
 
+import com.example.productapp.dto.Product
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
 @Service
-class ProductService(
+class ProductRepository(
     private val jdbcClient: JdbcClient
 ) {
     fun findAll(sortBy: String = "id", order: String = "asc", page: Int = 0, pageSize: Int = 10): Pair<List<Product>, Int> {
