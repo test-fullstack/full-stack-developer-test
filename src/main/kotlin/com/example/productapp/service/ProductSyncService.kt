@@ -3,6 +3,7 @@ package com.example.productapp.service
 import com.example.productapp.dto.Product
 import com.example.productapp.repository.ProductRepository
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -16,6 +17,7 @@ class ProductSyncService(
     private val productRepository: ProductRepository,
     private val objectMapper: ObjectMapper
 ) {
+    private val logger = LoggerFactory.getLogger(ProductSyncService::class.java)
     private val httpClient = HttpClient.newHttpClient()
 
     @Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
@@ -75,13 +77,13 @@ class ProductSyncService(
                         savedCount++
                     } catch (e: Exception) {
                         errorCount++
-                        e.printStackTrace()
+                        logger.error("Error saving product: ${e.message}", e)
                     }
                 }
-                println("Total products in API: $totalProducts, Successfully saved: $savedCount (limited to $maxProducts), Errors: $errorCount")
+                logger.info("Product sync completed - Total products in API: $totalProducts, Successfully saved: $savedCount (limited to $maxProducts), Errors: $errorCount")
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Error syncing products from API: ${e.message}", e)
         }
     }
 }
