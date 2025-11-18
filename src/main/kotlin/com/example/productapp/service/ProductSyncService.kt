@@ -3,6 +3,7 @@ package com.example.productapp.service
 import com.example.productapp.dto.Product
 import com.example.productapp.repository.ProductRepository
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.net.URI
@@ -17,6 +18,7 @@ class ProductSyncService(
 ) {
     private val httpClient = HttpClient.newHttpClient()
 
+    @Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
     fun syncProductsFromApi() {
         try {
             val request = HttpRequest.newBuilder()
@@ -30,10 +32,16 @@ class ProductSyncService(
             
             if (products != null && products.isArray) {
                 val totalProducts = products.size()
+                val maxProducts = 50 // Limit to 50 products as per requirement
                 var savedCount = 0
                 var errorCount = 0
                 
                 for (productNode in products) {
+                    // Stop after saving 50 products
+                    if (savedCount >= maxProducts) {
+                        break
+                    }
+                    
                     try {
                         val title = productNode.get("title")?.asText() ?: continue
                         val vendor = productNode.get("vendor")?.asText()
@@ -70,7 +78,7 @@ class ProductSyncService(
                         e.printStackTrace()
                     }
                 }
-                println("Total products in API: $totalProducts, Successfully saved: $savedCount, Errors: $errorCount")
+                println("Total products in API: $totalProducts, Successfully saved: $savedCount (limited to $maxProducts), Errors: $errorCount")
             }
         } catch (e: Exception) {
             e.printStackTrace()

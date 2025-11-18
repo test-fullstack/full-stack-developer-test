@@ -2,7 +2,6 @@ package com.example.productapp.controller
 
 import com.example.productapp.dto.Product
 import com.example.productapp.repository.ProductRepository
-import com.example.productapp.service.ProductSyncService
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,13 +11,10 @@ import org.springframework.web.bind.annotation.PathVariable
 
 @Controller
 class ProductController(
-    private val productRepository: ProductRepository,
-    private val productSyncService: ProductSyncService
+    private val productRepository: ProductRepository
 ) {
     @GetMapping("/")
     fun index(model: Model): String {
-        val productCount = productRepository.count()
-        model.addAttribute("hasProducts", productCount > 0)
         return "index"
     }
 
@@ -51,7 +47,7 @@ class ProductController(
         @RequestParam(required = false, defaultValue = "10") pageSize: Int,
         model: Model
     ): String {
-        productSyncService.syncProductsFromApi()
+        // Load products from Postgres database
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         val totalPages = (totalCount + pageSize - 1) / pageSize
         

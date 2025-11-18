@@ -165,10 +165,7 @@
             </div>
         </div>
         
-        <div id="product-table-container" 
-             th:attr="hx-get=${hasProducts ? '/products?sortBy=id&order=asc&page=0&pageSize=10' : null},
-                      hx-trigger=${hasProducts ? 'load' : null},
-                      hx-swap=${hasProducts ? 'innerHTML' : null}"></div>
+        <div id="product-table-container"></div>
     </div>
     
     <dialog id="deleteSuccessDialog">
@@ -252,15 +249,6 @@
             }
         });
         
-        document.addEventListener('DOMContentLoaded', function() {
-            const hasProducts = /*[[${hasProducts}]]*/ false;
-            if (hasProducts) {
-                htmx.ajax('GET', '/products?sortBy=id&order=asc&page=0&pageSize=10', {
-                    target: '#product-table-container',
-                    swap: 'innerHTML'
-                });
-            }
-        });
     </script>
 </body>
 </html>
