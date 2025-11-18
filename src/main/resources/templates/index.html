@@ -112,6 +112,18 @@
         .button-success:hover {
             background-color: #218838;
         }
+        
+        #deleteSuccessDialog {
+            border: none;
+            border-radius: 8px;
+            padding: var(--wa-spacing-lg);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 400px;
+        }
+        
+        #deleteSuccessDialog::backdrop {
+            background-color: rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
@@ -159,6 +171,16 @@
                       hx-swap=${hasProducts ? 'innerHTML' : null}"></div>
     </div>
     
+    <dialog id="deleteSuccessDialog">
+        <div style="margin-bottom: var(--wa-spacing-lg);">
+            <h3 style="margin-top: 0; color: var(--wa-color-success);">Success</h3>
+            <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
+        </div>
+        <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
+            <button class="button" onclick="document.getElementById('deleteSuccessDialog').close()" style="background-color: var(--wa-color-primary);">OK</button>
+        </div>
+    </dialog>
+    
     <script>
         function toggleForm() {
             const formContainer = document.getElementById('product-form-container');
@@ -177,11 +199,40 @@
             document.getElementById('toggle-form-btn').textContent = 'Add New Product';
         }
         
+        let deletedProductTitle = '';
+        
+        document.body.addEventListener('htmx:beforeRequest', function(event) {
+            if (event.detail.pathInfo.requestPath && event.detail.pathInfo.requestPath.includes('/delete')) {
+                const deleteProductTitle = document.getElementById('deleteProductTitle');
+                if (deleteProductTitle) {
+                    deletedProductTitle = deleteProductTitle.textContent;
+                }
+            }
+        });
+        
         document.body.addEventListener('htmx:afterSwap', function(event) {
             if (event.detail.target.id === 'product-table-container') {
                 const form = document.querySelector('#product-form-container form');
                 if (form) {
                     form.reset();
+                }
+                
+                if (event.detail.xhr.status === 200 && event.detail.pathInfo.requestPath.includes('/delete')) {
+                    const deleteDialog = document.getElementById('deleteDialog');
+                    if (deleteDialog) {
+                        deleteDialog.close();
+                    }
+                    
+                    if (deletedProductTitle) {
+                        const successDialog = document.getElementById('deleteSuccessDialog');
+                        if (successDialog) {
+                            document.getElementById('deletedProductTitle').textContent = deletedProductTitle;
+                            setTimeout(() => {
+                                successDialog.showModal();
+                            }, 100);
+                            deletedProductTitle = '';
+                        }
+                    }
                 }
             }
         });

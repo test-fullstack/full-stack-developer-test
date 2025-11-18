@@ -164,6 +164,16 @@
         <div id="product-table-container"></div>
     </div>
     
+    <dialog id="deleteSuccessDialog">
+        <div class="dialog-content">
+            <h3 style="color: var(--wa-color-success);">Success</h3>
+            <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
+        </div>
+        <div class="dialog-buttons">
+            <button class="button" onclick="document.getElementById('deleteSuccessDialog').close()" style="background-color: var(--wa-color-primary);">OK</button>
+        </div>
+    </dialog>
+    
     <dialog id="deleteDialog">
         <div class="dialog-content">
             <h3>Delete Product</h3>
@@ -175,16 +185,6 @@
             <form id="deleteForm" method="post" style="display: inline;">
                 <button type="submit" class="button" style="background-color: #dc3545;">Delete</button>
             </form>
-        </div>
-    </dialog>
-    
-    <dialog id="deleteSuccessDialog">
-        <div class="dialog-content">
-            <h3 style="color: var(--wa-color-success);">Success</h3>
-            <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
-        </div>
-        <div class="dialog-buttons">
-            <button class="button" onclick="document.getElementById('deleteSuccessDialog').close()" style="background-color: var(--wa-color-primary);">OK</button>
         </div>
     </dialog>
     
@@ -218,24 +218,50 @@
             if (e.target.id === 'deleteForm') {
                 e.preventDefault();
                 const form = e.target;
-                const deletedTitle = document.getElementById('deleteProductTitle').textContent;
-                
                 htmx.ajax('POST', form.action, {
                     target: '#product-table-container',
-                    swap: 'innerHTML',
-                    onSuccess: function() {
-                        document.getElementById('deleteDialog').close();
-                        document.getElementById('deletedProductTitle').textContent = deletedTitle;
-                        document.getElementById('deleteSuccessDialog').showModal();
-                        
-                        const searchInput = document.getElementById('searchInput');
-                        if (searchInput && searchInput.value) {
+                    swap: 'innerHTML'
+                });
+            }
+        });
+        
+        let deletedProductTitle = '';
+        
+        document.body.addEventListener('htmx:beforeRequest', function(event) {
+            if (event.detail.pathInfo.requestPath && event.detail.pathInfo.requestPath.includes('/delete')) {
+                const deleteProductTitle = document.getElementById('deleteProductTitle');
+                if (deleteProductTitle) {
+                    deletedProductTitle = deleteProductTitle.textContent;
+                }
+            }
+        });
+        
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'product-table-container') {
+                if (event.detail.xhr.status === 200 && event.detail.pathInfo.requestPath.includes('/delete')) {
+                    const deleteDialog = document.getElementById('deleteDialog');
+                    if (deleteDialog) {
+                        deleteDialog.close();
+                    }
+                    
+                    if (deletedProductTitle) {
+                        const successDialog = document.getElementById('deleteSuccessDialog');
+                        if (successDialog) {
+                            document.getElementById('deletedProductTitle').textContent = deletedProductTitle;
                             setTimeout(() => {
-                                htmx.trigger(searchInput, 'input');
+                                successDialog.showModal();
                             }, 100);
+                            deletedProductTitle = '';
                         }
                     }
-                });
+                    
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput && searchInput.value) {
+                        setTimeout(() => {
+                            htmx.trigger(searchInput, 'input');
+                        }, 100);
+                    }
+                }
             }
         });
     </script>

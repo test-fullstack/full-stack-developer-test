@@ -98,7 +98,7 @@
             <a href="/" class="button" style="margin-top: var(--wa-spacing-md);">Back to Products</a>
         </header>
         
-        <form th:action="@{/products/{id}/update(id=${product.id})}" method="post">
+        <form id="updateForm" th:action="@{/products/{id}/update(id=${product.id})}" method="post">
             <div class="form-group">
                 <label for="title">Title *</label>
                 <input type="text" id="title" name="title" th:value="${product.title}" required>
@@ -117,6 +117,62 @@
             </div>
         </form>
     </div>
+    
+    <dialog id="updateSuccessDialog">
+        <div style="margin-bottom: var(--wa-spacing-lg);">
+            <h3 style="margin-top: 0; color: var(--wa-color-success);">Success</h3>
+            <p>Product "<span id="updatedProductTitle"></span>" has been updated successfully.</p>
+        </div>
+        <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
+            <button class="button" onclick="closeUpdateSuccessDialog()" style="background-color: var(--wa-color-primary);">OK</button>
+        </div>
+    </dialog>
+    
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <script>
+        function closeUpdateSuccessDialog() {
+            document.getElementById('updateSuccessDialog').close();
+            window.location.href = '/';
+        }
+        
+        document.getElementById('updateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const updatedTitle = formData.get('title');
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('updatedProductTitle').textContent = updatedTitle;
+                    document.getElementById('updateSuccessDialog').showModal();
+                } else {
+                    alert('Failed to update product. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the product.');
+            });
+        });
+    </script>
+    
+    <style>
+        #updateSuccessDialog {
+            border: none;
+            border-radius: 8px;
+            padding: var(--wa-spacing-lg);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 400px;
+        }
+        
+        #updateSuccessDialog::backdrop {
+            background-color: rgba(0,0,0,0.5);
+        }
+    </style>
 </body>
 </html>
 
