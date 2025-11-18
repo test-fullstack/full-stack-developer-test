@@ -267,6 +267,23 @@
     </script>
     
     <script>
+        document.body.addEventListener('change', function(event) {
+            if (event.target && event.target.id === 'pageSize') {
+                const select = event.target;
+                const sortBy = select.getAttribute('data-sort-by') || 'id';
+                const order = select.getAttribute('data-order') || 'asc';
+                const newSize = select.value;
+                const searchInput = document.getElementById('searchInput');
+                const query = searchInput ? searchInput.value : '';
+                const url = '/products/search?query=' + encodeURIComponent(query) + '&sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
+                
+                htmx.ajax('GET', url, {
+                    target: '#product-table-container',
+                    swap: 'innerHTML'
+                });
+            }
+        });
+        
         document.addEventListener('DOMContentLoaded', function() {
             htmx.ajax('GET', '/products/search?query=&sortBy=id&order=asc&page=0&pageSize=10', {
                 target: '#product-table-container',
