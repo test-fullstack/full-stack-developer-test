@@ -55,7 +55,7 @@ class ProductSyncService(
                         val price = if (priceStr != null) {
                             try {
                                 BigDecimal(priceStr)
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 null
                             }
                         } else null
@@ -75,13 +75,13 @@ class ProductSyncService(
                         savedCount++
                     } catch (e: Exception) {
                         errorCount++
-                        logger.error("Error saving product: ${e.message}", e)
+                        logger.error("Error saving product", e)
                     }
                 }
                 logger.info("Product sync completed - Total products in API: $totalProducts, Successfully saved: $savedCount (limited to $maxProducts), Errors: $errorCount")
             }
         } catch (e: Exception) {
-            logger.error("Error syncing products from API: ${e.message}", e)
+            logger.error("Error syncing products from API", e)
         }
     }
 }

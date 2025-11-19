@@ -74,7 +74,7 @@ class ProductController(
     ): String {
         val productPrice = if (price.isNullOrBlank()) null else try {
             java.math.BigDecimal(price)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
 
@@ -151,7 +151,7 @@ class ProductController(
     ): String {
         val productPrice = if (price.isNullOrBlank()) null else try {
             java.math.BigDecimal(price)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
         
