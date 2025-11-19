@@ -179,6 +179,22 @@
     </dialog>
     
     <script>
+        /* global htmx */
+        
+        /**
+         * @typedef {Object} HTMXEventDetail
+         * @property {Object} pathInfo
+         * @property {string} pathInfo.requestPath
+         * @property {Object} target
+         * @property {string} target.id
+         * @property {Object} xhr
+         * @property {number} xhr.status
+         */
+        
+        /**
+         * @typedef {CustomEvent & {detail: HTMXEventDetail}} HTMXEvent
+         */
+        
         function toggleForm() {
             const formContainer = document.getElementById('product-form-container');
             const btn = document.getElementById('toggle-form-btn');
@@ -198,8 +214,10 @@
         
         let deletedProductTitle = '';
         
-        document.body.addEventListener('htmx:beforeRequest', function(event) {
-            if (event.detail.pathInfo.requestPath && event.detail.pathInfo.requestPath.includes('/delete')) {
+        //noinspection SpellCheckingInspection
+        document.body.addEventListener('htmx:beforeRequest', function(/** @type {HTMXEvent} */ event) {
+            const requestPath = event.detail?.pathInfo?.requestPath;
+            if (requestPath && requestPath.includes('/delete')) {
                 const deleteProductTitle = document.getElementById('deleteProductTitle');
                 if (deleteProductTitle) {
                     deletedProductTitle = deleteProductTitle.textContent;
@@ -207,14 +225,16 @@
             }
         });
         
-        document.body.addEventListener('htmx:afterSwap', function(event) {
-            if (event.detail.target.id === 'product-table-container') {
+        //noinspection SpellCheckingInspection
+        document.body.addEventListener('htmx:afterSwap', function(/** @type {HTMXEvent} */ event) {
+            if (event.detail?.target?.id === 'product-table-container') {
                 const form = document.querySelector('#product-form-container form');
                 if (form) {
                     form.reset();
                 }
                 
-                if (event.detail.xhr.status === 200 && event.detail.pathInfo.requestPath.includes('/delete')) {
+                const requestPath = event.detail?.pathInfo?.requestPath;
+                if (event.detail?.xhr?.status === 200 && requestPath && requestPath.includes('/delete')) {
                     const deleteDialog = document.getElementById('deleteDialog');
                     if (deleteDialog) {
                         deleteDialog.close();

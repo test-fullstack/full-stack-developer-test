@@ -151,6 +151,8 @@
 
 
 <script>
+    /* global htmx */
+    
     function showDeleteDialog(button) {
         const productId = button.getAttribute('data-product-id');
         const productTitle = button.getAttribute('data-product-title');
@@ -199,19 +201,7 @@
     dialog::backdrop {
         background-color: rgba(0,0,0,0.5);
     }
-    
-    #deleteSuccessDialog {
-        border: none;
-        border-radius: 8px;
-        padding: var(--wa-spacing-lg);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        max-width: 400px;
-    }
-    
-    #deleteSuccessDialog::backdrop {
-        background-color: rgba(0,0,0,0.5);
-    }
-    
+
     .button-delete {
         background-color: #dc3545;
         color: white;
