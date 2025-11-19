@@ -10,9 +10,9 @@ version = "0.0.1-SNAPSHOT"
 description = "productapp"
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
 }
 
 repositories {

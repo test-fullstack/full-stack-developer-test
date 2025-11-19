@@ -1,0 +1,141 @@
+:root {
+    --wa-color-primary: #0066cc;
+    --wa-color-success: #28a745;
+    --wa-spacing-md: 1rem;
+    --wa-spacing-lg: 1.5rem;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: var(--wa-spacing-lg);
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: var(--wa-spacing-lg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.container-narrow {
+    max-width: 600px;
+}
+
+header {
+    margin-bottom: var(--wa-spacing-lg);
+    padding-bottom: var(--wa-spacing-md);
+    border-bottom: 2px solid #e0e0e0;
+}
+
+h1 {
+    margin: 0;
+    color: #333;
+}
+
+.search-box {
+    margin-bottom: var(--wa-spacing-lg);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--wa-spacing-lg);
+}
+
+th, td {
+    padding: var(--wa-spacing-md);
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+tr:hover {
+    background-color: #f8f9fa;
+}
+
+.form-container {
+    margin-top: var(--wa-spacing-lg);
+    padding: var(--wa-spacing-lg);
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.form-group {
+    margin-bottom: var(--wa-spacing-md);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--wa-spacing-md);
+    margin-top: var(--wa-spacing-lg);
+}
+
+.dialog-content {
+    margin-bottom: var(--wa-spacing-lg);
+}
+
+.button-group {
+    margin-bottom: var(--wa-spacing-md);
+    display: flex;
+    gap: var(--wa-spacing-md);
+}
+
+.sortable-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.back-button {
+    margin-top: var(--wa-spacing-md);
+}
+
+.page-size-select {
+    width: 120px;
+}
+
+.actions-cell {
+    display: flex;
+    gap: var(--wa-spacing-md);
+    align-items: center;
+}
+
+.pagination {
+    margin-top: var(--wa-spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: var(--wa-spacing-md);
+    align-items: center;
+}
+
+.hidden {
+    display: none;
+}
+
+.dialog-margin {
+    margin-bottom: var(--wa-spacing-lg);
+}
+
+.warning-text {
+    color: #dc3545;
+    font-size: 0.9rem;
+}
+
+.page-size-wrapper {
+    margin-bottom: var(--wa-spacing-md);
+}
+

@@ -1,9 +1,9 @@
-<div style="margin-bottom: var(--wa-spacing-md);">
+<div class="page-size-wrapper">
     <wa-select id="pageSize" 
                th:attr="data-sort-by=${sortBy}, data-order=${order}"
                label="Items per page:"
                th:value="${pageSize}"
-               style="width: 120px;">
+               class="page-size-select">
         <wa-option value="10" th:selected="${pageSize == 10}">10</wa-option>
         <wa-option value="20" th:selected="${pageSize == 20}">20</wa-option>
         <wa-option value="50" th:selected="${pageSize == 50}">50</wa-option>
@@ -18,7 +18,7 @@
                    th:hx-get="@{/products(sortBy='id', order=${(sortBy == 'id' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
                    hx-target="#product-table-container" 
                    hx-swap="innerHTML"
-                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                   class="sortable-link">
                     ID
                     <span th:if="${sortBy == 'id'}">
                         <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
@@ -30,7 +30,7 @@
                    th:hx-get="@{/products(sortBy='title', order=${(sortBy == 'title' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
                    hx-target="#product-table-container" 
                    hx-swap="innerHTML"
-                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                   class="sortable-link">
                     Title
                     <span th:if="${sortBy == 'title'}">
                         <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
@@ -42,7 +42,7 @@
                    th:hx-get="@{/products(sortBy='price', order=${(sortBy == 'price' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
                    hx-target="#product-table-container" 
                    hx-swap="innerHTML"
-                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                   class="sortable-link">
                     Price
                     <span th:if="${sortBy == 'price'}">
                         <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
@@ -54,7 +54,7 @@
                    th:hx-get="@{/products(sortBy='vendor', order=${(sortBy == 'vendor' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
                    hx-target="#product-table-container" 
                    hx-swap="innerHTML"
-                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                   class="sortable-link">
                     Vendor
                     <span th:if="${sortBy == 'vendor'}">
                         <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
@@ -66,7 +66,7 @@
                    th:hx-get="@{/products(sortBy='created_at', order=${(sortBy == 'created_at' and order == 'asc') ? 'desc' : 'asc'}, page=${page}, pageSize=${pageSize})}" 
                    hx-target="#product-table-container" 
                    hx-swap="innerHTML"
-                   style="text-decoration: none; color: inherit; cursor: pointer;">
+                   class="sortable-link">
                     Created
                     <span th:if="${sortBy == 'created_at'}">
                         <span th:text="${order == 'asc' ? '↑' : '↓'}"></span>
@@ -83,7 +83,7 @@
             <td th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 2) : '-'}"></td>
             <td th:text="${product.vendor ?: '-'}"></td>
             <td th:text="${product.createdAt != null ? #temporals.format(product.createdAt, 'yyyy-MM-dd HH:mm') : '-'}"></td>
-            <td style="display: flex; gap: var(--wa-spacing-md); align-items: center;">
+            <td class="actions-cell">
                 <wa-button variant="success" size="small" th:href="@{/products/{id}/edit(id=${product.id})}">
                     Edit
                 </wa-button>
@@ -97,43 +97,104 @@
     </tbody>
 </table>
 
-<div style="margin-top: var(--wa-spacing-lg); display: flex; justify-content: space-between; align-items: center;">
+<div class="pagination">
     <div>
         <span th:text="'Showing ' + ${page * pageSize + 1} + ' to ' + ${(page + 1) * pageSize > totalCount ? totalCount : (page + 1) * pageSize} + ' of ' + ${totalCount} + ' products'"></span>
     </div>
-    <div style="display: flex; gap: var(--wa-spacing-md); align-items: center;">
+    <div class="pagination-controls">
+        <!-- First Page (<<) -->
         <wa-button variant="neutral" size="small"
-                th:if="${page > 0}"
-                th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${page - 1}, pageSize=${pageSize})}"
+                th:if="${page > 0 and query != null}"
+                th:hx-get="@{/products/search(query=${query}, sortBy=${sortBy}, order=${order}, page=0, pageSize=${pageSize})}"
                 hx-target="#product-table-container"
                 hx-swap="innerHTML">
-            Previous
+            &laquo;
+        </wa-button>
+        <wa-button variant="neutral" size="small"
+                th:if="${page > 0 and query == null}"
+                th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=0, pageSize=${pageSize})}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML">
+            &laquo;
         </wa-button>
         <wa-button variant="neutral" size="small"
                 th:if="${page == 0}"
                 disabled>
-            Previous
+            &laquo;
         </wa-button>
-        <span th:text="'Page ' + ${page + 1} + ' of ' + ${totalPages}"></span>
+        
+        <!-- Previous Page (<) -->
         <wa-button variant="neutral" size="small"
-                th:if="${page < totalPages - 1}"
+                th:if="${page > 0 and query != null}"
+                th:hx-get="@{/products/search(query=${query}, sortBy=${sortBy}, order=${order}, page=${page - 1}, pageSize=${pageSize})}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML">
+            &lt;
+        </wa-button>
+        <wa-button variant="neutral" size="small"
+                th:if="${page > 0 and query == null}"
+                th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${page - 1}, pageSize=${pageSize})}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML">
+            &lt;
+        </wa-button>
+        <wa-button variant="neutral" size="small"
+                th:if="${page == 0}"
+                disabled>
+            &lt;
+        </wa-button>
+        
+        <!-- Page Info -->
+        <span th:text="'Page ' + ${page + 1} + ' of ' + ${totalPages}"></span>
+        
+        <!-- Next Page (>) -->
+        <wa-button variant="neutral" size="small"
+                th:if="${page < totalPages - 1 and query != null}"
+                th:hx-get="@{/products/search(query=${query}, sortBy=${sortBy}, order=${order}, page=${page + 1}, pageSize=${pageSize})}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML">
+            &gt;
+        </wa-button>
+        <wa-button variant="neutral" size="small"
+                th:if="${page < totalPages - 1 and query == null}"
                 th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${page + 1}, pageSize=${pageSize})}"
                 hx-target="#product-table-container"
                 hx-swap="innerHTML">
-            Next
+            &gt;
         </wa-button>
         <wa-button variant="neutral" size="small"
                 th:if="${page >= totalPages - 1}"
                 disabled>
-            Next
+            &gt;
+        </wa-button>
+        
+        <!-- Last Page (>>) -->
+        <wa-button variant="neutral" size="small"
+                th:if="${page < totalPages - 1 and query != null}"
+                th:hx-get="@{/products/search(query=${query}, sortBy=${sortBy}, order=${order}, page=${totalPages - 1}, pageSize=${pageSize})}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML">
+            &raquo;
+        </wa-button>
+        <wa-button variant="neutral" size="small"
+                th:if="${page < totalPages - 1 and query == null}"
+                th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${totalPages - 1}, pageSize=${pageSize})}"
+                hx-target="#product-table-container"
+                hx-swap="innerHTML">
+            &raquo;
+        </wa-button>
+        <wa-button variant="neutral" size="small"
+                th:if="${page >= totalPages - 1}"
+                disabled>
+            &raquo;
         </wa-button>
     </div>
 </div>
 
 <wa-dialog label="Delete Product" id="deleteDialog">
-    <div style="margin-bottom: var(--wa-spacing-lg);">
+    <div class="dialog-margin">
         <p>Are you sure you want to delete "<span id="deleteProductTitle"></span>"?</p>
-        <p style="color: #dc3545; font-size: 0.9rem;">This action cannot be undone.</p>
+        <p class="warning-text">This action cannot be undone.</p>
     </div>
     <form id="deleteForm" method="post" style="display: none;">
     </form>

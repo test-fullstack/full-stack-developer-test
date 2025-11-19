@@ -6,6 +6,8 @@
     <title>Products</title>
     <!-- Web Awesome Styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/styles/webawesome.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.8"></script>
     <!-- Web Awesome Loader -->
@@ -14,75 +16,6 @@
         setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn');
         startLoader();
     </script>
-    <style>
-        :root {
-            --wa-color-primary: #0066cc;
-            --wa-color-success: #28a745;
-            --wa-spacing-md: 1rem;
-            --wa-spacing-lg: 1.5rem;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: var(--wa-spacing-lg);
-            background-color: #f5f5f5;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: var(--wa-spacing-lg);
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        header {
-            margin-bottom: var(--wa-spacing-lg);
-            padding-bottom: var(--wa-spacing-md);
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        h1 {
-            margin: 0;
-            color: #333;
-        }
-        
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: var(--wa-spacing-lg);
-        }
-        
-        th, td {
-            padding: var(--wa-spacing-md);
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .form-container {
-            margin-top: var(--wa-spacing-lg);
-            padding: var(--wa-spacing-lg);
-            background-color: #f8f9fa;
-            border-radius: 4px;
-        }
-        
-        .form-group {
-            margin-bottom: var(--wa-spacing-md);
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -90,7 +23,7 @@
             <h1>Products</h1>
         </header>
         
-        <div style="margin-bottom: var(--wa-spacing-md); display: flex; gap: var(--wa-spacing-md);">
+        <div class="button-group">
             <wa-button variant="brand" id="load-products-btn" hx-post="/products/load" hx-target="#product-table-container" hx-swap="innerHTML">
                 Load Products
             </wa-button>
@@ -102,7 +35,7 @@
             </wa-button>
         </div>
         
-        <div id="product-form-container" style="display: none;">
+        <div id="product-form-container" class="hidden">
             <div class="form-container">
                 <h2>Add New Product</h2>
                 <form hx-post="/products?sortBy=id&order=asc&page=0&pageSize=10" hx-target="#product-table-container" hx-swap="innerHTML" onsubmit="resetForm()">
@@ -124,7 +57,7 @@
     </div>
     
     <wa-dialog label="Success" id="deleteSuccessDialog">
-        <div style="margin-bottom: var(--wa-spacing-lg);">
+        <div class="dialog-margin">
             <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
         </div>
         <wa-button slot="footer" variant="brand" data-dialog="close">OK</wa-button>
@@ -150,17 +83,17 @@
         function toggleForm() {
             const formContainer = document.getElementById('product-form-container');
             const btn = document.getElementById('toggle-form-btn');
-            if (formContainer.style.display === 'none') {
-                formContainer.style.display = 'block';
+            if (formContainer.classList.contains('hidden')) {
+                formContainer.classList.remove('hidden');
                 btn.textContent = 'Hide Form';
             } else {
-                formContainer.style.display = 'none';
+                formContainer.classList.add('hidden');
                 btn.textContent = 'Add New Product';
             }
         }
         
         function resetForm() {
-            document.getElementById('product-form-container').style.display = 'none';
+            document.getElementById('product-form-container').classList.add('hidden');
             document.getElementById('toggle-form-btn').textContent = 'Add New Product';
         }
         
