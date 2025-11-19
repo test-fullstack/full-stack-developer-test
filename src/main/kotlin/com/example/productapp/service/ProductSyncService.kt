@@ -6,11 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClient
 import java.math.BigDecimal
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 
 @Service
 class ProductSyncService(
@@ -18,18 +15,19 @@ class ProductSyncService(
     private val objectMapper: ObjectMapper
 ) {
     private val logger = LoggerFactory.getLogger(ProductSyncService::class.java)
-    private val httpClient = HttpClient.newHttpClient()
+    private val restClient = RestClient.builder()
+        .baseUrl("https://famme.no")
+        .build()
 
     @Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
     fun syncProductsFromApi() {
         try {
-            val request = HttpRequest.newBuilder()
-                .uri(URI.create("https://famme.no/products.json?limit=250"))
-                .GET()
-                .build()
+            val responseBody = restClient.get()
+                .uri("/products.json?limit=250")
+                .retrieve()
+                .body(String::class.java)
 
-            val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-            val json = objectMapper.readTree(response.body())
+            val json = objectMapper.readTree(responseBody)
             val products = json.get("products")
             
             if (products != null && products.isArray) {
