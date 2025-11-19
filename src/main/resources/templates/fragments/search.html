@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en" class="wa-theme-awesome">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Products</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@webawesome/webawesome@1.0.0/css/all.min.css">
+    <!-- Web Awesome Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/styles/webawesome.css">
+    <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <!-- Web Awesome Loader -->
+    <script type="module">
+        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/webawesome.loader.js';
+        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn');
+        startLoader();
+    </script>
     <style>
         :root {
             --wa-color-primary: #0066cc;
@@ -41,34 +49,8 @@
             color: #333;
         }
         
-        .button {
-            background-color: var(--wa-color-primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-bottom: var(--wa-spacing-lg);
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .button:hover {
-            background-color: #0052a3;
-        }
-        
         .search-box {
             margin-bottom: var(--wa-spacing-lg);
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            box-sizing: border-box;
         }
         
         table {
@@ -132,22 +114,18 @@
     <div class="container">
         <header>
             <h1>Search Products</h1>
-            <a href="/" class="button" style="margin-top: var(--wa-spacing-md);">Back to Products</a>
+            <wa-button variant="success" href="/" style="margin-top: var(--wa-spacing-md);">Back to Products</wa-button>
         </header>
         
         <div class="search-box">
-            <label for="searchInput" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333;">
-                Search Products
-            </label>
-            <input type="text"
-                   id="searchInput"
-                   class="search-input"
-                   placeholder="Search products by title..."
-                   hx-get="/products/search"
-                   hx-target="#product-table-container"
-                   hx-swap="innerHTML"
-                   hx-trigger="keyup changed delay:300ms"
-                   name="query">
+            <wa-input label="Search Products"
+                      id="searchInput"
+                      placeholder="Search products by title..."
+                      hx-get="/products/search"
+                      hx-target="#product-table-container"
+                      hx-swap="innerHTML"
+                      hx-trigger="keyup changed delay:300ms"
+                      name="query"></wa-input>
         </div>
         
         <div id="product-table-container"></div>
@@ -159,7 +137,7 @@
             <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
         </div>
         <div class="dialog-buttons">
-            <button class="button" onclick="document.getElementById('deleteSuccessDialog').close()" style="background-color: var(--wa-color-primary);">OK</button>
+            <wa-button variant="brand" onclick="document.getElementById('deleteSuccessDialog').close()">OK</wa-button>
         </div>
     </dialog>
     
@@ -170,9 +148,9 @@
             <p style="color: #dc3545; font-size: 0.9rem;">This action cannot be undone.</p>
         </div>
         <div class="dialog-buttons">
-            <button class="button" onclick="document.getElementById('deleteDialog').close()">Cancel</button>
+            <wa-button variant="neutral" onclick="document.getElementById('deleteDialog').close()">Cancel</wa-button>
             <form id="deleteForm" method="post" style="display: inline;">
-                <button type="submit" class="button" style="background-color: #dc3545;">Delete</button>
+                <wa-button type="submit" variant="danger">Delete</wa-button>
             </form>
         </div>
     </dialog>
@@ -285,21 +263,29 @@
     <script>
         /* global htmx */
         
+        // Handle page size change
         document.body.addEventListener('change', function(event) {
-            if (event.target && event.target.id === 'pageSize') {
-                const select = event.target;
-                const sortBy = select.getAttribute('data-sort-by') || 'id';
-                const order = select.getAttribute('data-order') || 'asc';
-                const newSize = select.value;
-                const searchInput = document.getElementById('searchInput');
-                const query = searchInput ? searchInput.value : '';
-                const url = '/products/search?query=' + encodeURIComponent(query) + '&sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
-                
-                htmx.ajax('GET', url, {
-                    target: '#product-table-container',
-                    swap: 'innerHTML'
-                });
+            // Handle both native select and wa-select Web Component
+            let select = event.target;
+            
+            // If event is from inside wa-select shadow DOM, find the wa-select element
+            if (select.tagName !== 'WA-SELECT') {
+                select = select.closest('wa-select') || document.getElementById('pageSize');
             }
+            
+            if (!select || select.id !== 'pageSize') return;
+            
+            const sortBy = select.getAttribute('data-sort-by') || 'id';
+            const order = select.getAttribute('data-order') || 'asc';
+            const newSize = select.value;
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput ? (searchInput.value || (searchInput.shadowRoot?.querySelector('input')?.value) || '') : '';
+            const url = '/products/search?query=' + encodeURIComponent(query) + '&sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
+            
+            htmx.ajax('GET', url, {
+                target: '#product-table-container',
+                swap: 'innerHTML'
+            });
         });
         
         document.addEventListener('DOMContentLoaded', function() {

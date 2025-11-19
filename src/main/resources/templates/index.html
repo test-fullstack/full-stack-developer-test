@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en" class="wa-theme-awesome">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@webawesome/webawesome@1.0.0/css/all.min.css">
+    <!-- Web Awesome Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/styles/webawesome.css">
+    <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <!-- Web Awesome Loader -->
+    <script type="module">
+        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/webawesome.loader.js';
+        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn');
+        startLoader();
+    </script>
     <style>
         :root {
             --wa-color-primary: #0066cc;
@@ -41,20 +49,6 @@
             color: #333;
         }
         
-        .button {
-            background-color: var(--wa-color-primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-bottom: var(--wa-spacing-lg);
-        }
-        
-        .button:hover {
-            background-color: #0052a3;
-        }
         
         table {
             width: 100%;
@@ -89,29 +83,6 @@
             margin-bottom: var(--wa-spacing-md);
         }
         
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #333;
-        }
-        
-        input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-        
-        .button-success {
-            background-color: var(--wa-color-success);
-        }
-        
-        .button-success:hover {
-            background-color: #218838;
-        }
         
         #deleteSuccessDialog {
             border: none;
@@ -132,16 +103,16 @@
             <h1>Products</h1>
         </header>
         
-        <div style="margin-bottom: var(--wa-spacing-md);">
-            <button class="button" id="load-products-btn" hx-post="/products/load" hx-target="#product-table-container" hx-swap="innerHTML">
+        <div style="margin-bottom: var(--wa-spacing-md); display: flex; gap: var(--wa-spacing-md);">
+            <wa-button variant="brand" id="load-products-btn" hx-post="/products/load" hx-target="#product-table-container" hx-swap="innerHTML">
                 Load Products
-            </button>
-            <button class="button" id="toggle-form-btn" onclick="toggleForm()" style="margin-left: var(--wa-spacing-md);">
+            </wa-button>
+            <wa-button variant="brand" id="toggle-form-btn" onclick="toggleForm()">
                 Add New Product
-            </button>
-            <a href="/search" class="button" style="margin-left: var(--wa-spacing-md); text-decoration: none; display: inline-block;">
+            </wa-button>
+            <wa-button variant="brand" href="/search">
                 Search Products
-            </a>
+            </wa-button>
         </div>
         
         <div id="product-form-container" style="display: none;">
@@ -149,18 +120,15 @@
                 <h2>Add New Product</h2>
                 <form hx-post="/products?sortBy=id&order=asc&page=0&pageSize=10" hx-target="#product-table-container" hx-swap="innerHTML" onsubmit="resetForm()">
                     <div class="form-group">
-                        <label for="title">Title *</label>
-                        <input type="text" id="title" name="title" required>
+                        <wa-input label="Title *" id="title" name="title" required></wa-input>
                     </div>
                     <div class="form-group">
-                        <label for="price">Price</label>
-                        <input type="number" id="price" name="price" step="0.01">
+                        <wa-input label="Price" type="number" id="price" name="price" step="0.01"></wa-input>
                     </div>
                     <div class="form-group">
-                        <label for="vendor">Vendor</label>
-                        <input type="text" id="vendor" name="vendor">
+                        <wa-input label="Vendor" id="vendor" name="vendor"></wa-input>
                     </div>
-                    <button type="submit" class="button button-success">Add Product</button>
+                    <wa-button type="submit" variant="brand">Add Product</wa-button>
                 </form>
             </div>
         </div>
@@ -174,7 +142,7 @@
             <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
         </div>
         <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
-            <button class="button" onclick="document.getElementById('deleteSuccessDialog').close()" style="background-color: var(--wa-color-primary);">OK</button>
+            <wa-button variant="brand" onclick="document.getElementById('deleteSuccessDialog').close()">OK</wa-button>
         </div>
     </dialog>
     
@@ -254,19 +222,27 @@
             }
         });
         
+        // Handle page size change
         document.body.addEventListener('change', function(event) {
-            if (event.target && event.target.id === 'pageSize') {
-                const select = event.target;
-                const sortBy = select.getAttribute('data-sort-by') || 'id';
-                const order = select.getAttribute('data-order') || 'asc';
-                const newSize = select.value;
-                const url = '/products?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
-                
-                htmx.ajax('GET', url, {
-                    target: '#product-table-container',
-                    swap: 'innerHTML'
-                });
+            // Handle both native select and wa-select Web Component
+            let select = event.target;
+            
+            // If event is from inside wa-select shadow DOM, find the wa-select element
+            if (select.tagName !== 'WA-SELECT') {
+                select = select.closest('wa-select') || document.getElementById('pageSize');
             }
+            
+            if (!select || select.id !== 'pageSize') return;
+            
+            const sortBy = select.getAttribute('data-sort-by') || 'id';
+            const order = select.getAttribute('data-order') || 'asc';
+            const newSize = select.value;
+            const url = '/products?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
+            
+            htmx.ajax('GET', url, {
+                target: '#product-table-container',
+                swap: 'innerHTML'
+            });
         });
         
     </script>

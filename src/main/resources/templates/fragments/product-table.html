@@ -1,12 +1,13 @@
 <div style="margin-bottom: var(--wa-spacing-md);">
-    <label for="pageSize" style="margin-right: var(--wa-spacing-md);">Items per page:</label>
-    <select id="pageSize" 
-            th:attr="data-sort-by=${sortBy}, data-order=${order}"
-            style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
-        <option value="10" th:selected="${pageSize == 10}">10</option>
-        <option value="50" th:selected="${pageSize == 50}">50</option>
-        <option value="100" th:selected="${pageSize == 100}">100</option>
-    </select>
+    <wa-select id="pageSize" 
+               th:attr="data-sort-by=${sortBy}, data-order=${order}"
+               label="Items per page:"
+               th:value="${pageSize}"
+               style="width: 120px;">
+        <wa-option value="10" th:selected="${pageSize == 10}">10</wa-option>
+        <wa-option value="20" th:selected="${pageSize == 20}">20</wa-option>
+        <wa-option value="50" th:selected="${pageSize == 50}">50</wa-option>
+    </wa-select>
 </div>
 
 <table>
@@ -82,17 +83,15 @@
             <td th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 2) : '-'}"></td>
             <td th:text="${product.vendor ?: '-'}"></td>
             <td th:text="${product.createdAt != null ? #temporals.format(product.createdAt, 'yyyy-MM-dd HH:mm') : '-'}"></td>
-            <td>
-                <a th:href="@{/products/{id}/edit(id=${product.id})}" 
-                   style="color: var(--wa-color-primary); text-decoration: none; margin-right: var(--wa-spacing-md);">
+            <td style="display: flex; gap: var(--wa-spacing-md); align-items: center;">
+                <wa-button variant="success" size="small" th:href="@{/products/{id}/edit(id=${product.id})}">
                     Edit
-                </a>
-                <button class="button-delete" 
+                </wa-button>
+                <wa-button variant="danger" size="small" 
                         th:attr="data-product-id=${product.id}, data-product-title=${product.title}"
-                        onclick="showDeleteDialog(this)"
-                        style="background-color: #dc3545; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                        onclick="showDeleteDialog(this)">
                     Delete
-                </button>
+                </wa-button>
             </td>
         </tr>
     </tbody>
@@ -103,35 +102,31 @@
         <span th:text="'Showing ' + ${page * pageSize + 1} + ' to ' + ${(page + 1) * pageSize > totalCount ? totalCount : (page + 1) * pageSize} + ' of ' + ${totalCount} + ' products'"></span>
     </div>
     <div style="display: flex; gap: var(--wa-spacing-md); align-items: center;">
-        <button class="button" 
+        <wa-button variant="neutral" size="small"
                 th:if="${page > 0}"
                 th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${page - 1}, pageSize=${pageSize})}"
                 hx-target="#product-table-container"
-                hx-swap="innerHTML"
-                style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                hx-swap="innerHTML">
             Previous
-        </button>
-        <button class="button" 
+        </wa-button>
+        <wa-button variant="neutral" size="small"
                 th:if="${page == 0}"
-                disabled
-                style="padding: 0.5rem 1rem; font-size: 0.9rem; opacity: 0.5; cursor: not-allowed;">
+                disabled>
             Previous
-        </button>
+        </wa-button>
         <span th:text="'Page ' + ${page + 1} + ' of ' + ${totalPages}"></span>
-        <button class="button"
+        <wa-button variant="neutral" size="small"
                 th:if="${page < totalPages - 1}"
                 th:hx-get="@{/products(sortBy=${sortBy}, order=${order}, page=${page + 1}, pageSize=${pageSize})}"
                 hx-target="#product-table-container"
-                hx-swap="innerHTML"
-                style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                hx-swap="innerHTML">
             Next
-        </button>
-        <button class="button"
+        </wa-button>
+        <wa-button variant="neutral" size="small"
                 th:if="${page >= totalPages - 1}"
-                disabled
-                style="padding: 0.5rem 1rem; font-size: 0.9rem; opacity: 0.5; cursor: not-allowed;">
+                disabled>
             Next
-        </button>
+        </wa-button>
     </div>
 </div>
 
@@ -142,9 +137,9 @@
         <p style="color: #dc3545; font-size: 0.9rem;">This action cannot be undone.</p>
     </div>
     <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
-        <button class="button" onclick="document.getElementById('deleteDialog').close()" style="background-color: #6c757d;">Cancel</button>
+        <wa-button variant="neutral" onclick="document.getElementById('deleteDialog').close()">Cancel</wa-button>
         <form id="deleteForm" method="post" style="display: inline;">
-            <button type="submit" class="button" style="background-color: #dc3545;">Delete</button>
+            <wa-button type="submit" variant="danger">Delete</wa-button>
         </form>
     </div>
 </dialog>
@@ -152,6 +147,39 @@
 
 <script>
     /* global htmx */
+    
+    // Handle page size change
+    function handlePageSizeChange(event) {
+        // Handle both native select and wa-select Web Component
+        let select = event.target;
+        
+        // If event is from inside wa-select shadow DOM, find the wa-select element
+        if (select.tagName !== 'WA-SELECT') {
+            select = select.closest('wa-select') || document.getElementById('pageSize');
+        }
+        
+        if (!select || select.id !== 'pageSize') return;
+        
+        const sortBy = select.getAttribute('data-sort-by') || 'id';
+        const order = select.getAttribute('data-order') || 'asc';
+        const newSize = select.value;
+        
+        // Check if we're on search page
+        const searchInput = document.getElementById('searchInput');
+        const query = searchInput ? (searchInput.value || (searchInput.shadowRoot?.querySelector('input')?.value) || '') : '';
+        
+        const url = query 
+            ? '/products/search?query=' + encodeURIComponent(query) + '&sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize)
+            : '/products?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
+        
+        htmx.ajax('GET', url, {
+            target: '#product-table-container',
+            swap: 'innerHTML'
+        });
+    }
+    
+    // Listen for change events (works for both native select and wa-select)
+    document.body.addEventListener('change', handlePageSizeChange);
     
     function showDeleteDialog(button) {
         const productId = button.getAttribute('data-product-id');
@@ -162,7 +190,7 @@
         document.getElementById('deleteProductTitle').textContent = productTitle;
         
         const container = document.getElementById('product-table-container');
-        const select = container ? container.querySelector('#pageSize') : null;
+        const select = container ? container.querySelector('wa-select#pageSize') : null;
         const sortBy = select ? select.getAttribute('data-sort-by') || 'id' : 'id';
         const order = select ? select.getAttribute('data-order') || 'asc' : 'asc';
         const pageSize = select ? select.value || '10' : '10';
@@ -200,19 +228,5 @@
     
     dialog::backdrop {
         background-color: rgba(0,0,0,0.5);
-    }
-
-    .button-delete {
-        background-color: #dc3545;
-        color: white;
-        border: none;
-        padding: 0.25rem 0.75rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
-    
-    .button-delete:hover {
-        background-color: #c82333;
     }
 </style>
