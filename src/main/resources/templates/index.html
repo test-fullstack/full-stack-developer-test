@@ -82,19 +82,6 @@
         .form-group {
             margin-bottom: var(--wa-spacing-md);
         }
-        
-        
-        #deleteSuccessDialog {
-            border: none;
-            border-radius: 8px;
-            padding: var(--wa-spacing-lg);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            max-width: 400px;
-        }
-        
-        #deleteSuccessDialog::backdrop {
-            background-color: rgba(0,0,0,0.5);
-        }
     </style>
 </head>
 <body>
@@ -136,15 +123,12 @@
         <div id="product-table-container"></div>
     </div>
     
-    <dialog id="deleteSuccessDialog">
+    <wa-dialog label="Success" id="deleteSuccessDialog">
         <div style="margin-bottom: var(--wa-spacing-lg);">
-            <h3 style="margin-top: 0; color: var(--wa-color-success);">Success</h3>
             <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
         </div>
-        <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
-            <wa-button variant="brand" onclick="document.getElementById('deleteSuccessDialog').close()">OK</wa-button>
-        </div>
-    </dialog>
+        <wa-button slot="footer" variant="brand" data-dialog="close">OK</wa-button>
+    </wa-dialog>
     
     <script>
         /* global htmx */
@@ -193,19 +177,56 @@
             }
         });
         
+        let isAddingProduct = false;
+        
+        // Track when the add product form is submitted
+        document.body.addEventListener('htmx:beforeRequest', function(/** @type {HTMXEvent} */ event) {
+            const requestPath = event.detail?.pathInfo?.requestPath;
+            // Check if this is the add product form submission (POST to /products without /delete, /load, or /search)
+            if (requestPath && 
+                requestPath.startsWith('/products') && 
+                !requestPath.includes('/delete') && 
+                !requestPath.includes('/load') &&
+                !requestPath.includes('/search') &&
+                !requestPath.includes('/update') &&
+                !requestPath.includes('/edit')) {
+                const triggerElement = event.detail?.elt;
+                const form = document.querySelector('#product-form-container form');
+                if (form && (triggerElement === form || form.contains(triggerElement))) {
+                    isAddingProduct = true;
+                }
+            }
+        });
+        
         //noinspection SpellCheckingInspection
         document.body.addEventListener('htmx:afterSwap', function(/** @type {HTMXEvent} */ event) {
             if (event.detail?.target?.id === 'product-table-container') {
-                const form = document.querySelector('#product-form-container form');
-                if (form) {
-                    form.reset();
+                const requestPath = event.detail?.pathInfo?.requestPath;
+                
+                // Only reset form when a product is successfully added
+                if (isAddingProduct && event.detail?.xhr?.status === 200) {
+                    const form = document.querySelector('#product-form-container form');
+                    if (form) {
+                        form.reset();
+                        // Also reset WebAwesome input components
+                        const waInputs = form.querySelectorAll('wa-input');
+                        waInputs.forEach(input => {
+                            if (input.shadowRoot) {
+                                const nativeInput = input.shadowRoot.querySelector('input');
+                                if (nativeInput) {
+                                    nativeInput.value = '';
+                                }
+                            }
+                        });
+                    }
+                    isAddingProduct = false;
                 }
                 
-                const requestPath = event.detail?.pathInfo?.requestPath;
+                // Handle delete success dialog
                 if (event.detail?.xhr?.status === 200 && requestPath && requestPath.includes('/delete')) {
                     const deleteDialog = document.getElementById('deleteDialog');
                     if (deleteDialog) {
-                        deleteDialog.close();
+                        deleteDialog.open = false;
                     }
                     
                     if (deletedProductTitle) {
@@ -213,7 +234,7 @@
                         if (successDialog) {
                             document.getElementById('deletedProductTitle').textContent = deletedProductTitle;
                             setTimeout(() => {
-                                successDialog.showModal();
+                                successDialog.open = true;
                             }, 100);
                             deletedProductTitle = '';
                         }

@@ -130,19 +130,16 @@
     </div>
 </div>
 
-<dialog id="deleteDialog">
+<wa-dialog label="Delete Product" id="deleteDialog">
     <div style="margin-bottom: var(--wa-spacing-lg);">
-        <h3 style="margin-top: 0;">Delete Product</h3>
         <p>Are you sure you want to delete "<span id="deleteProductTitle"></span>"?</p>
         <p style="color: #dc3545; font-size: 0.9rem;">This action cannot be undone.</p>
     </div>
-    <div style="display: flex; gap: var(--wa-spacing-md); justify-content: flex-end;">
-        <wa-button variant="neutral" onclick="document.getElementById('deleteDialog').close()">Cancel</wa-button>
-        <form id="deleteForm" method="post" style="display: inline;">
-            <wa-button type="submit" variant="danger">Delete</wa-button>
-        </form>
-    </div>
-</dialog>
+    <form id="deleteForm" method="post" style="display: none;">
+    </form>
+    <wa-button slot="footer" variant="neutral" data-dialog="close">Cancel</wa-button>
+    <wa-button slot="footer" variant="danger" onclick="document.getElementById('deleteForm').requestSubmit()">Delete</wa-button>
+</wa-dialog>
 
 
 <script>
@@ -152,8 +149,7 @@
     function handlePageSizeChange(event) {
         // Handle both native select and wa-select Web Component
         let select = event.target;
-        
-        // If event is from inside wa-select shadow DOM, find the wa-select element
+
         if (select.tagName !== 'WA-SELECT') {
             select = select.closest('wa-select') || document.getElementById('pageSize');
         }
@@ -164,7 +160,6 @@
         const order = select.getAttribute('data-order') || 'asc';
         const newSize = select.value;
         
-        // Check if we're on search page
         const searchInput = document.getElementById('searchInput');
         const query = searchInput ? (searchInput.value || (searchInput.shadowRoot?.querySelector('input')?.value) || '') : '';
         
@@ -202,7 +197,7 @@
         form.setAttribute('hx-target', '#product-table-container');
         form.setAttribute('hx-swap', 'innerHTML');
         
-        dialog.showModal();
+        dialog.open = true;
     }
     
     document.body.addEventListener('submit', function(e) {
@@ -216,17 +211,3 @@
         }
     });
 </script>
-
-<style>
-    dialog {
-        border: none;
-        border-radius: 8px;
-        padding: var(--wa-spacing-lg);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        max-width: 400px;
-    }
-    
-    dialog::backdrop {
-        background-color: rgba(0,0,0,0.5);
-    }
-</style>

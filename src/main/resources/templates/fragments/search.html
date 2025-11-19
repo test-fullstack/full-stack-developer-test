@@ -75,38 +75,8 @@
             background-color: #f8f9fa;
         }
 
-        dialog {
-            border: none;
-            border-radius: 8px;
-            padding: var(--wa-spacing-lg);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            max-width: 400px;
-        }
-        
-        dialog::backdrop {
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        #deleteSuccessDialog {
-            border: none;
-            border-radius: 8px;
-            padding: var(--wa-spacing-lg);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            max-width: 400px;
-        }
-        
-        #deleteSuccessDialog::backdrop {
-            background-color: rgba(0,0,0,0.5);
-        }
-        
         .dialog-content {
             margin-bottom: var(--wa-spacing-lg);
-        }
-        
-        .dialog-buttons {
-            display: flex;
-            gap: var(--wa-spacing-md);
-            justify-content: flex-end;
         }
     </style>
 </head>
@@ -131,29 +101,23 @@
         <div id="product-table-container"></div>
     </div>
     
-    <dialog id="deleteSuccessDialog">
+    <wa-dialog label="Success" id="deleteSuccessDialog">
         <div class="dialog-content">
-            <h3 style="color: var(--wa-color-success);">Success</h3>
             <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
         </div>
-        <div class="dialog-buttons">
-            <wa-button variant="brand" onclick="document.getElementById('deleteSuccessDialog').close()">OK</wa-button>
-        </div>
-    </dialog>
+        <wa-button slot="footer" variant="brand" data-dialog="close">OK</wa-button>
+    </wa-dialog>
     
-    <dialog id="deleteDialog">
+    <wa-dialog label="Delete Product" id="deleteDialog">
         <div class="dialog-content">
-            <h3>Delete Product</h3>
             <p>Are you sure you want to delete "<span id="deleteProductTitle"></span>"?</p>
             <p style="color: #dc3545; font-size: 0.9rem;">This action cannot be undone.</p>
         </div>
-        <div class="dialog-buttons">
-            <wa-button variant="neutral" onclick="document.getElementById('deleteDialog').close()">Cancel</wa-button>
-            <form id="deleteForm" method="post" style="display: inline;">
-                <wa-button type="submit" variant="danger">Delete</wa-button>
-            </form>
-        </div>
-    </dialog>
+        <form id="deleteForm" method="post" style="display: none;">
+        </form>
+        <wa-button slot="footer" variant="neutral" data-dialog="close">Cancel</wa-button>
+        <wa-button slot="footer" variant="danger" onclick="document.getElementById('deleteForm').requestSubmit()">Delete</wa-button>
+    </wa-dialog>
     
     <script>
         /* global htmx */
@@ -201,7 +165,7 @@
             form.setAttribute('hx-target', '#product-table-container');
             form.setAttribute('hx-swap', 'innerHTML');
             
-            dialog.showModal();
+            dialog.open = true;
         }
         
         document.body.addEventListener('submit', function(e) {
@@ -235,7 +199,7 @@
                 if (event.detail?.xhr?.status === 200 && requestPath && requestPath.includes('/delete')) {
                     const deleteDialog = document.getElementById('deleteDialog');
                     if (deleteDialog) {
-                        deleteDialog.close();
+                        deleteDialog.open = false;
                     }
                     
                     if (deletedProductTitle) {
@@ -243,7 +207,7 @@
                         if (successDialog) {
                             document.getElementById('deletedProductTitle').textContent = deletedProductTitle;
                             setTimeout(() => {
-                                successDialog.showModal();
+                                successDialog.open = true;
                             }, 100);
                             deletedProductTitle = '';
                         }
