@@ -31,6 +31,17 @@ header {
     border-bottom: 2px solid #e0e0e0;
 }
 
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.total-count {
+    font-size: 1rem;
+    color: #666;
+}
+
 h1 {
     margin: 0;
     color: #333;

@@ -169,7 +169,7 @@
             // Handle both native select and wa-select Web Component
             let select = event.target;
             
-            // If event is from inside wa-select shadow DOM, find the wa-select element
+            // If the event is from inside wa-select shadow DOM, find the wa-select element
             if (select.tagName !== 'WA-SELECT') {
                 select = select.closest('wa-select') || document.getElementById('pageSize');
             }

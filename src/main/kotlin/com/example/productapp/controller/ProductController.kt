@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.ResponseBody
 
 @Controller
 class ProductController(
@@ -33,8 +34,17 @@ class ProductController(
     }
     
     @GetMapping("/")
-    fun index(): String {
+    fun index(model: Model): String {
+        val totalCount = productRepository.getTotalCount()
+        model.addAttribute("totalCount", totalCount)
         return "index"
+    }
+    
+    @GetMapping("/products/total-count")
+    @ResponseBody
+    fun getTotalCount(): String {
+        val totalCount = productRepository.getTotalCount()
+        return "<span>Total Products in DB: <strong>$totalCount</strong></span>"
     }
 
     @GetMapping("/products")

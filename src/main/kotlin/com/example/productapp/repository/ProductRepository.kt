@@ -106,5 +106,11 @@ class ProductRepository(
         
         return Pair(products, totalCount)
     }
+    
+    fun getTotalCount(): Int {
+        return jdbcClient.sql("SELECT COUNT(*) FROM products")
+            .query(Int::class.java)
+            .single()
+    }
 }
 
