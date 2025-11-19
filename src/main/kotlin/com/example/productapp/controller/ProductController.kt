@@ -13,6 +13,25 @@ import org.springframework.web.bind.annotation.PathVariable
 class ProductController(
     private val productRepository: ProductRepository
 ) {
+    private fun addProductsToModel(
+        products: List<Product>,
+        totalCount: Int,
+        sortBy: String,
+        order: String,
+        page: Int,
+        pageSize: Int,
+        model: Model
+    ) {
+        val totalPages = (totalCount + pageSize - 1) / pageSize
+        model.addAttribute("products", products)
+        model.addAttribute("sortBy", sortBy)
+        model.addAttribute("order", order)
+        model.addAttribute("page", page)
+        model.addAttribute("pageSize", pageSize)
+        model.addAttribute("totalCount", totalCount)
+        model.addAttribute("totalPages", totalPages)
+    }
+    
     @GetMapping("/")
     fun index(): String {
         return "index"
@@ -27,15 +46,7 @@ class ProductController(
         model: Model
     ): String {
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
-        val totalPages = (totalCount + pageSize - 1) / pageSize
-        
-        model.addAttribute("products", products)
-        model.addAttribute("sortBy", sortBy)
-        model.addAttribute("order", order)
-        model.addAttribute("page", page)
-        model.addAttribute("pageSize", pageSize)
-        model.addAttribute("totalCount", totalCount)
-        model.addAttribute("totalPages", totalPages)
+        addProductsToModel(products, totalCount, sortBy, order, page, pageSize, model)
         return "fragments/product-table"
     }
     
@@ -49,15 +60,7 @@ class ProductController(
     ): String {
         // Load products from a Postgres database
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
-        val totalPages = (totalCount + pageSize - 1) / pageSize
-        
-        model.addAttribute("products", products)
-        model.addAttribute("sortBy", sortBy)
-        model.addAttribute("order", order)
-        model.addAttribute("page", page)
-        model.addAttribute("pageSize", pageSize)
-        model.addAttribute("totalCount", totalCount)
-        model.addAttribute("totalPages", totalPages)
+        addProductsToModel(products, totalCount, sortBy, order, page, pageSize, model)
         return "fragments/product-table"
     }
 
@@ -87,15 +90,7 @@ class ProductController(
 
         productRepository.save(product)
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
-        val totalPages = (totalCount + pageSize - 1) / pageSize
-        
-        model.addAttribute("products", products)
-        model.addAttribute("sortBy", sortBy)
-        model.addAttribute("order", order)
-        model.addAttribute("page", page)
-        model.addAttribute("pageSize", pageSize)
-        model.addAttribute("totalCount", totalCount)
-        model.addAttribute("totalPages", totalPages)
+        addProductsToModel(products, totalCount, sortBy, order, page, pageSize, model)
         return "fragments/product-table"
     }
     
@@ -118,16 +113,8 @@ class ProductController(
         } else {
             productRepository.searchByTitle(query, sortBy, order, page, pageSize)
         }
-        val totalPages = (totalCount + pageSize - 1) / pageSize
-        
-        model.addAttribute("products", products)
+        addProductsToModel(products, totalCount, sortBy, order, page, pageSize, model)
         model.addAttribute("query", query)
-        model.addAttribute("sortBy", sortBy)
-        model.addAttribute("order", order)
-        model.addAttribute("page", page)
-        model.addAttribute("pageSize", pageSize)
-        model.addAttribute("totalCount", totalCount)
-        model.addAttribute("totalPages", totalPages)
         return "fragments/product-table"
     }
     
@@ -174,15 +161,7 @@ class ProductController(
     ): String {
         productRepository.delete(id)
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
-        val totalPages = (totalCount + pageSize - 1) / pageSize
-        
-        model.addAttribute("products", products)
-        model.addAttribute("sortBy", sortBy)
-        model.addAttribute("order", order)
-        model.addAttribute("page", page)
-        model.addAttribute("pageSize", pageSize)
-        model.addAttribute("totalCount", totalCount)
-        model.addAttribute("totalPages", totalPages)
+        addProductsToModel(products, totalCount, sortBy, order, page, pageSize, model)
         return "fragments/product-table"
     }
 }
