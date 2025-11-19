@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.body
 import java.math.BigDecimal
 
 @Service
@@ -25,7 +26,7 @@ class ProductSyncService(
             val responseBody = restClient.get()
                 .uri("/products.json?limit=250")
                 .retrieve()
-                .body(String::class.java)
+                .body<String>()
 
             val json = objectMapper.readTree(responseBody)
             val products = json.get("products")

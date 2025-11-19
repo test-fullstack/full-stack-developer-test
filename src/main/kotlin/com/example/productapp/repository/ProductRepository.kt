@@ -9,27 +9,34 @@ import java.math.BigDecimal
 class ProductRepository(
     private val jdbcClient: JdbcClient
 ) {
-    fun findAll(sortBy: String = "id", order: String = "asc", page: Int = 0, pageSize: Int = 10): Pair<List<Product>, Int> {
+    private fun parseSortParams(sortBy: String, order: String, page: Int, pageSize: Int): Triple<String, String, Int> {
         val validSortColumns = setOf("id", "title", "price", "vendor", "created_at")
         val sortColumn = if (validSortColumns.contains(sortBy.lowercase())) sortBy.lowercase() else "id"
         val sortOrder = if (order.lowercase() == "desc") "DESC" else "ASC"
         val offset = page * pageSize
+        return Triple(sortColumn, sortOrder, offset)
+    }
+    
+    private fun mapRowToProduct(rs: java.sql.ResultSet): Product {
+        return Product(
+            id = rs.getLong("id"),
+            title = rs.getString("title"),
+            price = rs.getObject("price", BigDecimal::class.java),
+            vendor = rs.getString("vendor"),
+            variants = rs.getString("variants"),
+            createdAt = rs.getTimestamp("created_at")?.toLocalDateTime()
+        )
+    }
+    
+    fun findAll(sortBy: String = "id", order: String = "asc", page: Int = 0, pageSize: Int = 10): Pair<List<Product>, Int> {
+        val (sortColumn, sortOrder, offset) = parseSortParams(sortBy, order, page, pageSize)
         
         val sql = "SELECT id, title, price, vendor, variants, created_at FROM products ORDER BY $sortColumn $sortOrder LIMIT ? OFFSET ?"
         
         val products = jdbcClient.sql(sql)
             .param(pageSize)
             .param(offset)
-            .query { rs, _ ->
-                Product(
-                    id = rs.getLong("id"),
-                    title = rs.getString("title"),
-                    price = rs.getObject("price", BigDecimal::class.java),
-                    vendor = rs.getString("vendor"),
-                    variants = rs.getString("variants"),
-                    createdAt = rs.getTimestamp("created_at")?.toLocalDateTime()
-                )
-            }
+            .query { rs, _ -> mapRowToProduct(rs) }
             .list()
         
         val totalCount = jdbcClient.sql("SELECT COUNT(*) FROM products")
@@ -51,25 +58,10 @@ class ProductRepository(
         return id
     }
 
-    fun count(): Int {
-        return jdbcClient.sql("SELECT COUNT(*) FROM products")
-            .query(Int::class.java)
-            .single()
-    }
-    
     fun findById(id: Long): Product? {
         return jdbcClient.sql("SELECT id, title, price, vendor, variants, created_at FROM products WHERE id = ?")
             .param(id)
-            .query { rs, _ ->
-                Product(
-                    id = rs.getLong("id"),
-                    title = rs.getString("title"),
-                    price = rs.getObject("price", BigDecimal::class.java),
-                    vendor = rs.getString("vendor"),
-                    variants = rs.getString("variants"),
-                    createdAt = rs.getTimestamp("created_at")?.toLocalDateTime()
-                )
-            }
+            .query { rs, _ -> mapRowToProduct(rs) }
             .optional()
             .orElse(null)
     }
@@ -95,10 +87,7 @@ class ProductRepository(
     }
     
     fun searchByTitle(title: String, sortBy: String = "id", order: String = "asc", page: Int = 0, pageSize: Int = 10): Pair<List<Product>, Int> {
-        val validSortColumns = setOf("id", "title", "price", "vendor", "created_at")
-        val sortColumn = if (validSortColumns.contains(sortBy.lowercase())) sortBy.lowercase() else "id"
-        val sortOrder = if (order.lowercase() == "desc") "DESC" else "ASC"
-        val offset = page * pageSize
+        val (sortColumn, sortOrder, offset) = parseSortParams(sortBy, order, page, pageSize)
         val searchTerm = "%${title.lowercase()}%"
         
         val sql = "SELECT id, title, price, vendor, variants, created_at FROM products WHERE LOWER(title) LIKE ? ORDER BY $sortColumn $sortOrder LIMIT ? OFFSET ?"
@@ -107,16 +96,7 @@ class ProductRepository(
             .param(searchTerm)
             .param(pageSize)
             .param(offset)
-            .query { rs, _ ->
-                Product(
-                    id = rs.getLong("id"),
-                    title = rs.getString("title"),
-                    price = rs.getObject("price", BigDecimal::class.java),
-                    vendor = rs.getString("vendor"),
-                    variants = rs.getString("variants"),
-                    createdAt = rs.getTimestamp("created_at")?.toLocalDateTime()
-                )
-            }
+            .query { rs, _ -> mapRowToProduct(rs) }
             .list()
         
         val totalCount = jdbcClient.sql("SELECT COUNT(*) FROM products WHERE LOWER(title) LIKE ?")

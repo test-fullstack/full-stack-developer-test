@@ -14,7 +14,7 @@ class ProductController(
     private val productRepository: ProductRepository
 ) {
     @GetMapping("/")
-    fun index(model: Model): String {
+    fun index(): String {
         return "index"
     }
 
@@ -47,7 +47,7 @@ class ProductController(
         @RequestParam(required = false, defaultValue = "10") pageSize: Int,
         model: Model
     ): String {
-        // Load products from Postgres database
+        // Load products from a Postgres database
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         val totalPages = (totalCount + pageSize - 1) / pageSize
         
@@ -100,7 +100,7 @@ class ProductController(
     }
     
     @GetMapping("/search")
-    fun searchPage(model: Model): String {
+    fun searchPage(): String {
         return "fragments/search"
     }
     
@@ -133,10 +133,7 @@ class ProductController(
     
     @GetMapping("/products/{id}/edit")
     fun editProduct(@PathVariable id: Long, model: Model): String {
-        val product = productRepository.findById(id)
-        if (product == null) {
-            return "redirect:/"
-        }
+        val product = productRepository.findById(id) ?: return "redirect:/"
         model.addAttribute("product", product)
         return "fragments/edit-product"
     }
@@ -146,8 +143,7 @@ class ProductController(
         @PathVariable id: Long,
         @RequestParam title: String,
         @RequestParam(required = false) price: String?,
-        @RequestParam(required = false) vendor: String?,
-        model: Model
+        @RequestParam(required = false) vendor: String?
     ): String {
         val productPrice = if (price.isNullOrBlank()) null else try {
             java.math.BigDecimal(price)
