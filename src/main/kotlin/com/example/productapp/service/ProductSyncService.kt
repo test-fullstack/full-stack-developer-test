@@ -24,7 +24,7 @@ class ProductSyncService(
     fun syncProductsFromApi() {
         try {
             val responseBody = restClient.get()
-                .uri("/products.json?limit=250")
+                .uri("/products.json")
                 .retrieve()
                 .body<String>()
 
@@ -33,16 +33,10 @@ class ProductSyncService(
             
             if (products != null && products.isArray) {
                 val totalProducts = products.size()
-                val maxProducts = 50 // Limit to 50 products as per requirement
                 var savedCount = 0
                 var errorCount = 0
                 
                 for (productNode in products) {
-                    // Stop after saving 50 products
-                    if (savedCount >= maxProducts) {
-                        break
-                    }
-                    
                     try {
                         val title = productNode.get("title")?.asText() ?: continue
                         val vendor = productNode.get("vendor")?.asText()
@@ -76,13 +70,13 @@ class ProductSyncService(
                         savedCount++
                     } catch (e: Exception) {
                         errorCount++
-                        logger.error("Error saving product", e)
+                        logger.error("Error saving product: ${e.message}", e)
                     }
                 }
-                logger.info("Product sync completed - Total products in API: $totalProducts, Successfully saved: $savedCount (limited to $maxProducts), Errors: $errorCount")
+                logger.info("Product sync completed - Total products in API: $totalProducts, Successfully saved: $savedCount, Errors: $errorCount")
             }
         } catch (e: Exception) {
-            logger.error("Error syncing products from API", e)
+            logger.error("Error syncing products from API: ${e.message}", e)
         }
     }
 }

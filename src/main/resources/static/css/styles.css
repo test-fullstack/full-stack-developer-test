@@ -1,24 +1,16 @@
-:root {
-    --wa-color-primary: #0066cc;
-    --wa-color-success: #28a745;
-    --wa-spacing-md: 1rem;
-    --wa-spacing-lg: 1.5rem;
-}
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
-    padding: var(--wa-spacing-lg);
-    background-color: #f5f5f5;
+    padding: var(--wa-space-l);
+    background-color: var(--wa-color-surface-lowered);
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background: white;
-    padding: var(--wa-spacing-lg);
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: var(--wa-color-surface-default);
+    padding: var(--wa-space-l);
+    border-radius: var(--wa-border-radius-m);
+    box-shadow: var(--wa-shadow-sm);
 }
 
 .container-narrow {
@@ -26,9 +18,9 @@ body {
 }
 
 header {
-    margin-bottom: var(--wa-spacing-lg);
-    padding-bottom: var(--wa-spacing-md);
-    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: var(--wa-space-l);
+    padding-bottom: var(--wa-space-m);
+    border-bottom: var(--wa-border-width-m) var(--wa-border-style) var(--wa-color-surface-border);
 }
 
 .header-content {
@@ -38,66 +30,66 @@ header {
 }
 
 .total-count {
-    font-size: 1rem;
-    color: #666;
+    font-size: var(--wa-font-size-medium);
+    color: var(--wa-color-text-quiet);
 }
 
 h1 {
     margin: 0;
-    color: #333;
+    color: var(--wa-color-text-normal);
 }
 
 .search-box {
-    margin-bottom: var(--wa-spacing-lg);
+    margin-bottom: var(--wa-space-l);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: var(--wa-spacing-lg);
+    margin-bottom: var(--wa-space-l);
 }
 
 th, td {
-    padding: var(--wa-spacing-md);
+    padding: var(--wa-space-m);
     text-align: left;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
 }
 
 th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-    color: #333;
+    background-color: var(--wa-color-surface-lowered);
+    font-weight: var(--wa-font-weight-semibold);
+    color: var(--wa-color-text-normal);
 }
 
 tr:hover {
-    background-color: #f8f9fa;
+    background-color: var(--wa-color-surface-lowered);
 }
 
 .form-container {
-    margin-top: var(--wa-spacing-lg);
-    padding: var(--wa-spacing-lg);
-    background-color: #f8f9fa;
-    border-radius: 4px;
+    margin-top: var(--wa-space-l);
+    padding: var(--wa-space-l);
+    background-color: var(--wa-color-surface-lowered);
+    border-radius: var(--wa-border-radius-s);
 }
 
 .form-group {
-    margin-bottom: var(--wa-spacing-md);
+    margin-bottom: var(--wa-space-m);
 }
 
 .form-actions {
     display: flex;
-    gap: var(--wa-spacing-md);
-    margin-top: var(--wa-spacing-lg);
+    gap: var(--wa-space-m);
+    margin-top: var(--wa-space-l);
 }
 
 .dialog-content {
-    margin-bottom: var(--wa-spacing-lg);
+    margin-bottom: var(--wa-space-l);
 }
 
 .button-group {
-    margin-bottom: var(--wa-spacing-md);
+    margin-bottom: var(--wa-space-m);
     display: flex;
-    gap: var(--wa-spacing-md);
+    gap: var(--wa-space-m);
 }
 
 .sortable-link {
@@ -107,7 +99,7 @@ tr:hover {
 }
 
 .back-button {
-    margin-top: var(--wa-spacing-md);
+    margin-top: var(--wa-space-m);
 }
 
 .page-size-select {
@@ -116,12 +108,12 @@ tr:hover {
 
 .actions-cell {
     display: flex;
-    gap: var(--wa-spacing-md);
+    gap: var(--wa-space-m);
     align-items: center;
 }
 
 .pagination {
-    margin-top: var(--wa-spacing-lg);
+    margin-top: var(--wa-space-l);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -129,7 +121,7 @@ tr:hover {
 
 .pagination-controls {
     display: flex;
-    gap: var(--wa-spacing-md);
+    gap: var(--wa-space-m);
     align-items: center;
 }
 
@@ -138,15 +130,15 @@ tr:hover {
 }
 
 .dialog-margin {
-    margin-bottom: var(--wa-spacing-lg);
+    margin-bottom: var(--wa-space-l);
 }
 
 .warning-text {
-    color: #dc3545;
-    font-size: 0.9rem;
+    color: var(--wa-color-danger-fill-loud);
+    font-size: var(--wa-font-size-small);
 }
 
 .page-size-wrapper {
-    margin-bottom: var(--wa-spacing-md);
+    margin-bottom: var(--wa-space-m);
 }
 
