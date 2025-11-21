@@ -2,6 +2,7 @@ package com.example.productapp.controller
 
 import com.example.productapp.dto.Product
 import com.example.productapp.repository.ProductRepository
+import com.example.productapp.service.ProductService
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,7 +13,8 @@ import org.springframework.web.bind.annotation.ResponseBody
 
 @Controller
 class ProductController(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val productService: ProductService
 ) {
     private fun addProductsToModel(
         products: List<Product>,
@@ -85,19 +87,7 @@ class ProductController(
         @RequestParam(required = false, defaultValue = "10") pageSize: Int,
         model: Model
     ): String {
-        val productPrice = if (price.isNullOrBlank()) null else try {
-            java.math.BigDecimal(price)
-        } catch (_: Exception) {
-            null
-        }
-
-        val product = Product(
-            title = title,
-            price = productPrice,
-            vendor = vendor,
-            variants = "[]"
-        )
-
+        val product = productService.createProduct(title, price, vendor)
         productRepository.save(product)
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         addProductsToModel(products, totalCount, sortBy, order, page, pageSize, model)
@@ -142,20 +132,7 @@ class ProductController(
         @RequestParam(required = false) price: String?,
         @RequestParam(required = false) vendor: String?
     ): String {
-        val productPrice = if (price.isNullOrBlank()) null else try {
-            java.math.BigDecimal(price)
-        } catch (_: Exception) {
-            null
-        }
-        
-        val product = Product(
-            id = id,
-            title = title,
-            price = productPrice,
-            vendor = vendor,
-            variants = "[]"
-        )
-        
+        val product = productService.updateProduct(id, title, price, vendor)
         productRepository.update(product)
         return "redirect:/"
     }

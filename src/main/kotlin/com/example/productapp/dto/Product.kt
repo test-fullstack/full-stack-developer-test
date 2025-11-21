@@ -12,16 +12,3 @@ data class Product(
     val createdAt: LocalDateTime? = null
 )
 
-data class ProductVariant(
-    val title: String?,
-    val price: String?,
-    val sku: String?
-)
-
-data class ShopifyProduct(
-    val id: Long?,
-    val title: String?,
-    val vendor: String?,
-    val variants: List<ProductVariant>?
-)
-
