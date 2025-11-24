@@ -142,3 +142,12 @@ tr:hover {
     margin-bottom: var(--wa-space-m);
 }
 
+/* Form styling inside dialog */
+wa-dialog form .form-group {
+    margin-bottom: var(--wa-space-m);
+}
+
+wa-dialog form .form-group:last-of-type {
+    margin-bottom: 0;
+}
+

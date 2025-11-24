@@ -36,7 +36,7 @@
             <wa-button variant="brand" id="load-products-btn" hx-post="/products/load" hx-target="#product-table-container" hx-swap="innerHTML">
                 Load Products
             </wa-button>
-            <wa-button variant="brand" id="toggle-form-btn" onclick="toggleForm()">
+            <wa-button variant="brand" id="open-add-product-dialog-btn" onclick="openAddProductDialog()">
                 Add New Product
             </wa-button>
             <wa-button variant="brand" href="/search">
@@ -44,26 +44,26 @@
             </wa-button>
         </div>
         
-        <div id="product-form-container" class="hidden">
-            <div class="form-container">
-                <h2>Add New Product</h2>
-                <form hx-post="/products?sortBy=id&order=asc&page=0&pageSize=10" hx-target="#product-table-container" hx-swap="innerHTML" onsubmit="resetForm()">
-                    <div class="form-group">
-                        <wa-input label="Title *" id="title" name="title" required></wa-input>
-                    </div>
-                    <div class="form-group">
-                        <wa-input label="Price" type="number" id="price" name="price" step="0.01"></wa-input>
-                    </div>
-                    <div class="form-group">
-                        <wa-input label="Vendor" id="vendor" name="vendor"></wa-input>
-                    </div>
-                    <wa-button type="submit" variant="brand">Add Product</wa-button>
-                </form>
-            </div>
-        </div>
-        
         <div id="product-table-container"></div>
     </div>
+    
+    <wa-dialog label="Add New Product" id="addProductDialog">
+        <form id="add-product-form" 
+              method="post"
+              action="/products?sortBy=id&order=asc&page=0&pageSize=10">
+            <div class="form-group">
+                <wa-input label="Title *" id="add-product-title" name="title" required></wa-input>
+            </div>
+            <div class="form-group">
+                <wa-input label="Price" type="number" id="add-product-price" name="price" step="0.01"></wa-input>
+            </div>
+            <div class="form-group">
+                <wa-input label="Vendor" id="add-product-vendor" name="vendor"></wa-input>
+            </div>
+        </form>
+        <wa-button slot="footer" variant="neutral" data-dialog="close">Cancel</wa-button>
+        <wa-button slot="footer" variant="brand" id="submit-add-product-btn" onclick="submitAddProductForm()">Add Product</wa-button>
+    </wa-dialog>
     
     <wa-dialog label="Success" id="deleteSuccessDialog">
         <div class="dialog-margin">
@@ -89,21 +89,112 @@
          * @typedef {CustomEvent & {detail: HTMXEventDetail}} HTMXEvent
          */
         
-        function toggleForm() {
-            const formContainer = document.getElementById('product-form-container');
-            const btn = document.getElementById('toggle-form-btn');
-            if (formContainer.classList.contains('hidden')) {
-                formContainer.classList.remove('hidden');
-                btn.textContent = 'Hide Form';
-            } else {
-                formContainer.classList.add('hidden');
-                btn.textContent = 'Add New Product';
+        function openAddProductDialog() {
+            const dialog = document.getElementById('addProductDialog');
+            if (dialog) {
+                dialog.open = true;
+                // Prevent HTMX from processing events from form inputs
+                // Wait for Web Awesome components to be ready
+                setTimeout(() => {
+                    const form = document.getElementById('add-product-form');
+                    if (form) {
+                        const waInputs = form.querySelectorAll('wa-input');
+                        waInputs.forEach(waInput => {
+                            // Prevent all events from bubbling to HTMX
+                            ['input', 'change', 'blur', 'focus', 'keyup', 'keydown'].forEach(eventType => {
+                                waInput.addEventListener(eventType, function(e) {
+                                    e.stopPropagation();
+                                }, true); // Use capture phase
+                                
+                                // Also prevent from shadow DOM
+                                if (waInput.shadowRoot) {
+                                    const nativeInput = waInput.shadowRoot.querySelector('input');
+                                    if (nativeInput) {
+                                        nativeInput.addEventListener(eventType, function(e) {
+                                            e.stopPropagation();
+                                        }, true);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                }, 100);
             }
         }
         
-        function resetForm() {
-            document.getElementById('product-form-container').classList.add('hidden');
-            document.getElementById('toggle-form-btn').textContent = 'Add New Product';
+        function closeAddProductDialog() {
+            const dialog = document.getElementById('addProductDialog');
+            if (dialog) {
+                dialog.open = false;
+            }
+        }
+        
+        function resetAddProductForm() {
+            const form = document.getElementById('add-product-form');
+            if (form) {
+                form.reset();
+                // Also reset WebAwesome input components
+                const waInputs = form.querySelectorAll('wa-input');
+                waInputs.forEach(input => {
+                    if (input.shadowRoot) {
+                        const nativeInput = input.shadowRoot.querySelector('input');
+                        if (nativeInput) {
+                            nativeInput.value = '';
+                        }
+                    }
+                });
+            }
+        }
+        
+        function submitAddProductForm() {
+            const form = document.getElementById('add-product-form');
+            if (!form) return;
+            
+            // Validate required fields
+            const titleInput = document.getElementById('add-product-title');
+            let title = '';
+            if (titleInput && titleInput.shadowRoot) {
+                const nativeInput = titleInput.shadowRoot.querySelector('input');
+                if (nativeInput) {
+                    title = nativeInput.value || '';
+                }
+            }
+            
+            if (!title || title.trim() === '') {
+                if (titleInput) {
+                    titleInput.focus();
+                }
+                return;
+            }
+            
+            // Mark that we're submitting
+            isAddingProduct = true;
+            
+            // Use HTMX to submit the form
+            htmx.ajax('POST', form.action, {
+                target: '#product-table-container',
+                swap: 'innerHTML',
+                values: {
+                    title: title,
+                    price: getInputValue('add-product-price'),
+                    vendor: getInputValue('add-product-vendor'),
+                    sortBy: 'id',
+                    order: 'asc',
+                    page: '0',
+                    pageSize: '10'
+                }
+            });
+        }
+        
+        function getInputValue(inputId) {
+            const input = document.getElementById(inputId);
+            if (input && input.shadowRoot) {
+                const nativeInput = input.shadowRoot.querySelector('input');
+                if (nativeInput) {
+                    return nativeInput.value || '';
+                }
+            }
+            return '';
         }
         
         let deletedProductTitle = '';
@@ -121,6 +212,39 @@
         
         let isAddingProduct = false;
         
+        // Prevent HTMX from processing any events from the add product form inputs
+        // Only allow explicit submission via the submit button
+        document.addEventListener('htmx:configRequest', function(event) {
+            const requestPath = event.detail?.pathInfo?.requestPath;
+            const triggerElement = event.detail?.elt;
+            
+            // Cancel any requests to /products that come from form inputs (not explicit submission)
+            if (requestPath && requestPath.startsWith('/products') && 
+                !requestPath.includes('/delete') && 
+                !requestPath.includes('/load') &&
+                !requestPath.includes('/search') &&
+                !requestPath.includes('/update') &&
+                !requestPath.includes('/edit') &&
+                !requestPath.includes('/total-count')) {
+                
+                // If this is not from our explicit submission, cancel it
+                if (!isAddingProduct) {
+                    // Check if it's from an input field
+                    const isFromInput = triggerElement && (
+                        triggerElement.tagName === 'WA-INPUT' ||
+                        triggerElement.closest('wa-input') ||
+                        triggerElement.closest('#add-product-form') ||
+                        (triggerElement.tagName === 'INPUT' && triggerElement.type !== 'submit' && triggerElement.closest('#add-product-form'))
+                    );
+                    
+                    if (isFromInput) {
+                        event.preventDefault();
+                        return false;
+                    }
+                }
+            }
+        });
+        
         // Track when the add product form is submitted
         document.body.addEventListener('htmx:beforeRequest', function(/** @type {HTMXEvent} */ event) {
             const requestPath = event.detail?.pathInfo?.requestPath;
@@ -131,11 +255,13 @@
                 !requestPath.includes('/load') &&
                 !requestPath.includes('/search') &&
                 !requestPath.includes('/update') &&
-                !requestPath.includes('/edit')) {
-                const triggerElement = event.detail?.elt;
-                const form = document.querySelector('#product-form-container form');
-                if (form && (triggerElement === form || form.contains(triggerElement))) {
-                    isAddingProduct = true;
+                !requestPath.includes('/edit') &&
+                !requestPath.includes('/total-count')) {
+                // Only mark as adding if we explicitly set the flag
+                if (isAddingProduct) {
+                    // This is our explicit submission, allow it
+                } else {
+                    // This is an unwanted request from inputs, but we already prevent it in configRequest
                 }
             }
         });
@@ -145,22 +271,10 @@
             if (event.detail?.target?.id === 'product-table-container') {
                 const requestPath = event.detail?.pathInfo?.requestPath;
                 
-                // Only reset the form when a product is successfully added
+                // Only reset and close the dialog when a product is successfully added
                 if (isAddingProduct && event.detail?.xhr?.status === 200) {
-                    const form = document.querySelector('#product-form-container form');
-                    if (form) {
-                        form.reset();
-                        // Also reset WebAwesome input components
-                        const waInputs = form.querySelectorAll('wa-input');
-                        waInputs.forEach(input => {
-                            if (input.shadowRoot) {
-                                const nativeInput = input.shadowRoot.querySelector('input');
-                                if (nativeInput) {
-                                    nativeInput.value = '';
-                                }
-                            }
-                        });
-                    }
+                    resetAddProductForm();
+                    closeAddProductDialog();
                     isAddingProduct = false;
                 }
                 
