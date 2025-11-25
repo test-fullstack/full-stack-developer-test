@@ -18,7 +18,7 @@ class ProductSyncService(
 ) {
     private val logger = LoggerFactory.getLogger(ProductSyncService::class.java)
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000) // Run daily (24 hours = 86400000 ms)
+    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     fun syncProductsFromApi() {
         try {
             val responseBody = fammeRestClient.get()
@@ -37,7 +37,6 @@ class ProductSyncService(
                     val maxProducts = 50
                     
                     for ((index, productNode) in products.withIndex()) {
-                        // Limit to 50 products
                         if (index >= maxProducts) {
                             logger.info("Reached product limit of $maxProducts, stopping sync")
                             break
@@ -48,10 +47,8 @@ class ProductSyncService(
                             val vendor = productNode.get("vendor")?.asText()
                             val variants = productNode.get("variants")
 
-                            // Extract all variant prices and calculate minimum price
                             val minPrice = extractMinPriceFromVariants(variants)
 
-                            // Store all variants as JSONB
                             val variantsJson = if (variants != null) {
                                 objectMapper.writeValueAsString(variants)
                             } else "[]"
@@ -78,10 +75,6 @@ class ProductSyncService(
         }
     }
     
-    /**
-     * Extracts the minimum price from all product variants.
-     * If no variants or no valid prices found, returns null.
-     */
     private fun extractMinPriceFromVariants(variants: JsonNode?): BigDecimal? {
         if (variants == null || !variants.isArray || variants.size() == 0) {
             return null

@@ -21,7 +21,7 @@
     <div class="container">
         <header>
             <div class="header-content">
-                <h1>Products</h1>
+            <h1>Products</h1>
                 <div id="total-count-container" 
                      class="total-count"
                      hx-get="/products/total-count" 
@@ -51,16 +51,16 @@
         <form id="add-product-form" 
               method="post"
               action="/products?sortBy=id&order=asc&page=0&pageSize=10">
-            <div class="form-group">
+                    <div class="form-group">
                 <wa-input label="Title *" id="add-product-title" name="title" required></wa-input>
-            </div>
-            <div class="form-group">
+                    </div>
+                    <div class="form-group">
                 <wa-input label="Price" type="number" id="add-product-price" name="price" step="0.01"></wa-input>
-            </div>
-            <div class="form-group">
+                    </div>
+                    <div class="form-group">
                 <wa-input label="Vendor" id="add-product-vendor" name="vendor"></wa-input>
-            </div>
-        </form>
+                    </div>
+                </form>
         <wa-button slot="footer" variant="neutral" data-dialog="close">Cancel</wa-button>
         <wa-button slot="footer" variant="brand" id="submit-add-product-btn" onclick="submitAddProductForm()">Add Product</wa-button>
     </wa-dialog>
@@ -73,40 +73,20 @@
     </wa-dialog>
     
     <script>
-        /* global htmx */
-        
-        /**
-         * @typedef {Object} HTMXEventDetail
-         * @property {Object} pathInfo
-         * @property {string} pathInfo.requestPath
-         * @property {Object} target
-         * @property {string} target.id
-         * @property {Object} xhr
-         * @property {number} xhr.status
-         */
-        
-        /**
-         * @typedef {CustomEvent & {detail: HTMXEventDetail}} HTMXEvent
-         */
-        
         function openAddProductDialog() {
             const dialog = document.getElementById('addProductDialog');
             if (dialog) {
                 dialog.open = true;
-                // Prevent HTMX from processing events from form inputs
-                // Wait for Web Awesome components to be ready
                 setTimeout(() => {
                     const form = document.getElementById('add-product-form');
                     if (form) {
                         const waInputs = form.querySelectorAll('wa-input');
                         waInputs.forEach(waInput => {
-                            // Prevent all events from bubbling to HTMX
                             ['input', 'change', 'blur', 'focus', 'keyup', 'keydown'].forEach(eventType => {
                                 waInput.addEventListener(eventType, function(e) {
                                     e.stopPropagation();
-                                }, true); // Use capture phase
+                                }, true);
                                 
-                                // Also prevent from shadow DOM
                                 if (waInput.shadowRoot) {
                                     const nativeInput = waInput.shadowRoot.querySelector('input');
                                     if (nativeInput) {
@@ -133,7 +113,6 @@
             const form = document.getElementById('add-product-form');
             if (form) {
                 form.reset();
-                // Also reset WebAwesome input components
                 const waInputs = form.querySelectorAll('wa-input');
                 waInputs.forEach(input => {
                     if (input.shadowRoot) {
@@ -150,7 +129,6 @@
             const form = document.getElementById('add-product-form');
             if (!form) return;
             
-            // Validate required fields
             const titleInput = document.getElementById('add-product-title');
             let title = '';
             if (titleInput && titleInput.shadowRoot) {
@@ -167,10 +145,8 @@
                 return;
             }
             
-            // Mark that we're submitting
             isAddingProduct = true;
             
-            // Use HTMX to submit the form
             htmx.ajax('POST', form.action, {
                 target: '#product-table-container',
                 swap: 'innerHTML',
@@ -198,9 +174,9 @@
         }
         
         let deletedProductTitle = '';
+        let isAddingProduct = false;
         
-        //noinspection SpellCheckingInspection
-        document.body.addEventListener('htmx:beforeRequest', function(/** @type {HTMXEvent} */ event) {
+        document.body.addEventListener('htmx:beforeRequest', function(event) {
             const requestPath = event.detail?.pathInfo?.requestPath;
             if (requestPath && requestPath.includes('/delete')) {
                 const deleteProductTitle = document.getElementById('deleteProductTitle');
@@ -210,15 +186,10 @@
             }
         });
         
-        let isAddingProduct = false;
-        
-        // Prevent HTMX from processing any events from the add product form inputs
-        // Only allow explicit submission via the submit button
         document.addEventListener('htmx:configRequest', function(event) {
             const requestPath = event.detail?.pathInfo?.requestPath;
             const triggerElement = event.detail?.elt;
             
-            // Cancel any requests to /products that come from form inputs (not explicit submission)
             if (requestPath && requestPath.startsWith('/products') && 
                 !requestPath.includes('/delete') && 
                 !requestPath.includes('/load') &&
@@ -227,9 +198,7 @@
                 !requestPath.includes('/edit') &&
                 !requestPath.includes('/total-count')) {
                 
-                // If this is not from our explicit submission, cancel it
                 if (!isAddingProduct) {
-                    // Check if it's from an input field
                     const isFromInput = triggerElement && (
                         triggerElement.tagName === 'WA-INPUT' ||
                         triggerElement.closest('wa-input') ||
@@ -245,40 +214,16 @@
             }
         });
         
-        // Track when the add product form is submitted
-        document.body.addEventListener('htmx:beforeRequest', function(/** @type {HTMXEvent} */ event) {
-            const requestPath = event.detail?.pathInfo?.requestPath;
-            // Check if this is the add product form submission (POST to /products without /delete, /load, or /search)
-            if (requestPath && 
-                requestPath.startsWith('/products') && 
-                !requestPath.includes('/delete') && 
-                !requestPath.includes('/load') &&
-                !requestPath.includes('/search') &&
-                !requestPath.includes('/update') &&
-                !requestPath.includes('/edit') &&
-                !requestPath.includes('/total-count')) {
-                // Only mark as adding if we explicitly set the flag
-                if (isAddingProduct) {
-                    // This is our explicit submission, allow it
-                } else {
-                    // This is an unwanted request from inputs, but we already prevent it in configRequest
-                }
-            }
-        });
-        
-        //noinspection SpellCheckingInspection
-        document.body.addEventListener('htmx:afterSwap', function(/** @type {HTMXEvent} */ event) {
+        document.body.addEventListener('htmx:afterSwap', function(event) {
             if (event.detail?.target?.id === 'product-table-container') {
                 const requestPath = event.detail?.pathInfo?.requestPath;
                 
-                // Only reset and close the dialog when a product is successfully added
                 if (isAddingProduct && event.detail?.xhr?.status === 200) {
                     resetAddProductForm();
                     closeAddProductDialog();
                     isAddingProduct = false;
                 }
                 
-                // Handle delete success dialog
                 if (event.detail?.xhr?.status === 200 && requestPath && requestPath.includes('/delete')) {
                     const deleteDialog = document.getElementById('deleteDialog');
                     if (deleteDialog) {
@@ -299,12 +244,9 @@
             }
         });
         
-        // Handle page size change
         document.body.addEventListener('change', function(event) {
-            // Handle both native select and wa-select Web Component
             let select = event.target;
             
-            // If the event is from inside wa-select shadow DOM, find the wa-select element
             if (select.tagName !== 'WA-SELECT') {
                 select = select.closest('wa-select') || document.getElementById('pageSize');
             }

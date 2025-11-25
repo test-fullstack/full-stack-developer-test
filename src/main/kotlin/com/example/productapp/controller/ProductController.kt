@@ -70,7 +70,6 @@ class ProductController(
         @RequestParam(required = false, defaultValue = "10") pageSize: Int,
         model: Model
     ): String {
-        // Load products from a Postgres database
         val (products, totalCount) = productRepository.findAll(sortBy, order, page, pageSize)
         addProductsToModel(products, totalCount, sortBy, order, page, pageSize, model)
         return "fragments/product-table"

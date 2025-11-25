@@ -1,90 +1,36 @@
-### Variables
 @baseUrl = http://localhost:8081
 
-### ============================================
-### Main Page
-### ============================================
-
-### Get Main Page (index.html)
+### Main page
 GET {{baseUrl}}/
 
-### ============================================
-### Product Operations
-### ============================================
-
-### Load Products from Database (POST - loads from Postgres)
+### Load products
 POST {{baseUrl}}/products/load?sortBy=id&order=asc&page=0&pageSize=10
-Content-Type: application/x-www-form-urlencoded
 
-### Get Products with Pagination and Sorting
+### Get products
 GET {{baseUrl}}/products?sortBy=id&order=asc&page=0&pageSize=10
 
-### Get Products - Sort by Title (Ascending)
+### Get products - different sorting
 GET {{baseUrl}}/products?sortBy=title&order=asc&page=0&pageSize=10
-
-### Get Products - Sort by Price (Descending)
 GET {{baseUrl}}/products?sortBy=price&order=desc&page=0&pageSize=50
-
-### Get Products - Page 2
 GET {{baseUrl}}/products?sortBy=id&order=asc&page=1&pageSize=10
 
-### ============================================
-### Add Product
-### ============================================
-
-### Add New Product
+### Add product
 POST {{baseUrl}}/products?sortBy=id&order=asc&page=0&pageSize=10
 Content-Type: application/x-www-form-urlencoded
 
 title=Test Product&price=99.99&vendor=Test Vendor
 
-### Add Product (Minimal - Title Only)
-POST {{baseUrl}}/products?sortBy=id&order=asc&page=0&pageSize=10
-Content-Type: application/x-www-form-urlencoded
-
-title=Another Product
-
-### ============================================
-### Search Products
-### ============================================
-
-### Search Page
+### Search
 GET {{baseUrl}}/search
-
-### Search Products by Title
 GET {{baseUrl}}/products/search?query=test&sortBy=id&order=asc&page=0&pageSize=10
 
-### Search Products - Empty Query (Returns All)
-GET {{baseUrl}}/products/search?query=&sortBy=id&order=asc&page=0&pageSize=10
-
-### Search Products - Sort by Price
-GET {{baseUrl}}/products/search?query=product&sortBy=price&order=desc&page=0&pageSize=50
-
-### ============================================
-### Edit Product
-### ============================================
-
-### Get Edit Product Page (Replace {id} with actual product ID)
+### Edit product (change the id)
 GET {{baseUrl}}/products/1/edit
 
-### Update Product (Replace {id} with actual product ID)
 POST {{baseUrl}}/products/1/update
 Content-Type: application/x-www-form-urlencoded
 
-title=Updated Product Title&price=149.99&vendor=Updated Vendor
+title=Updated Title&price=149.99&vendor=Updated Vendor
 
-### ============================================
-### Delete Product
-### ============================================
-
-### Delete Product (Replace {id} with actual product ID)
+### Delete product (change the id)
 POST {{baseUrl}}/products/1/delete?sortBy=id&order=asc&page=0&pageSize=10
-Content-Type: application/x-www-form-urlencoded
-
-### ============================================
-### Notes:
-### - Replace {id} with actual product IDs from your database
-### - All POST requests return HTML fragments (Thymeleaf templates)
-### - Responses will be HTML, not JSON (since this is a server-side rendered app)
-### - Make sure your Spring Boot app is running on port 8081
-### ============================================
