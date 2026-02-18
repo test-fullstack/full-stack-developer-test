@@ -33,6 +33,7 @@ class ProductSyncService(
                 if (products != null && products.isArray) {
                     val totalProducts = products.size()
                     var savedCount = 0
+                    var skippedCount = 0
                     var errorCount = 0
                     val maxProducts = 50
                     
@@ -44,6 +45,12 @@ class ProductSyncService(
                         
                         try {
                             val title = productNode.get("title")?.asText() ?: continue
+
+                            if (productRepository.existsByTitle(title)) {
+                                skippedCount++
+                                continue
+                            }
+
                             val vendor = productNode.get("vendor")?.asText()
                             val variants = productNode.get("variants")
 
@@ -67,7 +74,7 @@ class ProductSyncService(
                             logger.error("Error saving product: ${e.message}", e)
                         }
                     }
-                    logger.info("Product sync completed - Total products in API: $totalProducts, Processed: ${minOf(maxProducts, totalProducts)}, Successfully saved: $savedCount, Errors: $errorCount")
+                    logger.info("Product sync completed - Total: $totalProducts, Processed: ${minOf(maxProducts, totalProducts)}, Saved: $savedCount, Skipped (duplicate): $skippedCount, Errors: $errorCount")
                 }
             }
         } catch (e: Exception) {

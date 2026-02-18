@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.http.ResponseEntity
 
 @Controller
 class ProductController(
@@ -125,15 +126,16 @@ class ProductController(
     }
     
     @PostMapping("/products/{id}/update")
+    @ResponseBody
     fun updateProduct(
         @PathVariable id: Long,
         @RequestParam title: String,
         @RequestParam(required = false) price: String?,
         @RequestParam(required = false) vendor: String?
-    ): String {
+    ): ResponseEntity<String> {
         val product = productService.updateProduct(id, title, price, vendor)
         productRepository.update(product)
-        return "redirect:/"
+        return ResponseEntity.ok("Product updated successfully")
     }
     
     @PostMapping("/products/{id}/delete")

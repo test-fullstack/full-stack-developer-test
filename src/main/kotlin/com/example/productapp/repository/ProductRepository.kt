@@ -112,5 +112,13 @@ class ProductRepository(
             .query(Int::class.java)
             .single()
     }
+
+    fun existsByTitle(title: String): Boolean {
+        val count = jdbcClient.sql("SELECT COUNT(*) FROM products WHERE title = ?")
+            .param(title)
+            .query(Int::class.java)
+            .single()
+        return count > 0
+    }
 }
 

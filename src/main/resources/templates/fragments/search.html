@@ -5,24 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Products</title>
     <!-- Web Awesome Styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/styles/webawesome.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn/styles/webawesome.css">
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.8"></script>
     <!-- Web Awesome Loader -->
     <script type="module">
-        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/webawesome.loader.js';
-        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn');
+        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn/webawesome.loader.js';
+        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn');
         startLoader();
     </script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Search Products</h1>
-            <wa-button variant="success" href="/" class="back-button">Back to Products</wa-button>
+            <h1>
+                <wa-icon name="magnifying-glass" variant="solid"></wa-icon>
+                Search Products
+            </h1>
+            <wa-button variant="success" href="/" class="back-button">
+                <wa-icon name="arrow-left" slot="prefix"></wa-icon>
+                Back to Products
+            </wa-button>
         </header>
+        
+        <wa-divider></wa-divider>
         
         <div class="search-box">
             <wa-input label="Search Products"
@@ -32,170 +40,61 @@
                       hx-target="#product-table-container"
                       hx-swap="innerHTML"
                       hx-trigger="keyup changed delay:300ms"
-                      name="query"></wa-input>
+                      name="query">
+                <wa-icon name="magnifying-glass" slot="prefix"></wa-icon>
+            </wa-input>
         </div>
         
         <div id="product-table-container"></div>
     </div>
     
-    <wa-dialog label="Success" id="deleteSuccessDialog">
-        <div class="dialog-content">
+    <div class="loading-overlay">
+        <wa-spinner></wa-spinner>
+    </div>
+    
+    <wa-dialog label="Success" id="deleteSuccessDialog" style="--width: 420px;">
+        <div class="dialog-margin">
+            <wa-icon name="circle-check" variant="solid" class="success-icon"></wa-icon>
             <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
         </div>
         <wa-button slot="footer" variant="brand" data-dialog="close">OK</wa-button>
     </wa-dialog>
     
-    <wa-dialog label="Delete Product" id="deleteDialog">
-        <div class="dialog-content">
+    <wa-dialog label="Delete Product" id="deleteDialog" style="--width: 420px;">
+        <div class="dialog-margin">
             <p>Are you sure you want to delete "<span id="deleteProductTitle"></span>"?</p>
             <p class="warning-text">This action cannot be undone.</p>
         </div>
-        <form id="deleteForm" method="post" style="display: none;">
-        </form>
-        <wa-button slot="footer" variant="neutral" data-dialog="close">Cancel</wa-button>
-        <wa-button slot="footer" variant="danger" onclick="document.getElementById('deleteForm').requestSubmit()">Delete</wa-button>
+        <form id="deleteForm" method="post" style="display: none;"></form>
+        <wa-button slot="footer" variant="neutral" data-dialog="close">
+            <wa-icon name="xmark" slot="prefix"></wa-icon>
+            Cancel
+        </wa-button>
+        <wa-button slot="footer" variant="danger" onclick="document.getElementById('deleteForm').requestSubmit()">
+            <wa-icon name="trash-can" slot="prefix"></wa-icon>
+            Delete
+        </wa-button>
     </wa-dialog>
     
+    <script src="/js/shared.js"></script>
     <script>
-        /* global htmx */
-        
-        /**
-         * @typedef {Object} HTMXEventDetail
-         * @property {Object} pathInfo
-         * @property {string} pathInfo.requestPath
-         * @property {Object} target
-         * @property {string} target.id
-         * @property {Object} xhr
-         * @property {number} xhr.status
-         */
-        
-        /**
-         * @typedef {CustomEvent & {detail: HTMXEventDetail}} HTMXEvent
-         */
-        
-        /**
-         * Shows the delete confirmation dialog for a product.
-         * Called from dynamically loaded product-table.html fragment.
-         * @param {HTMLElement} button - The delete button element
-         */
-        //noinspection JSUnusedGlobalSymbols
-        function showDeleteDialog(button) {
-            const productId = button.getAttribute('data-product-id');
-            const productTitle = button.getAttribute('data-product-title');
-            const dialog = document.getElementById('deleteDialog');
-            const form = document.getElementById('deleteForm');
-            
-            document.getElementById('deleteProductTitle').textContent = productTitle;
-            
-            const container = document.getElementById('product-table-container');
-            const select = container ? container.querySelector('#pageSize') : null;
-            const sortBy = select ? select.getAttribute('data-sort-by') || 'id' : 'id';
-            const order = select ? select.getAttribute('data-order') || 'asc' : 'asc';
-            const pageSize = select ? select.value || '10' : '10';
-            const searchInput = document.getElementById('searchInput');
-            const query = searchInput ? searchInput.value : '';
-            
-            const deleteUrl = '/products/' + productId + '/delete?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(pageSize) + (query ? '&query=' + encodeURIComponent(query) : '');
-            
-            form.action = deleteUrl;
-            form.setAttribute('hx-post', deleteUrl);
-            form.setAttribute('hx-target', '#product-table-container');
-            form.setAttribute('hx-swap', 'innerHTML');
-            
-            dialog.open = true;
-        }
-        
-        document.body.addEventListener('submit', function(e) {
-            if (e.target.id === 'deleteForm') {
-                e.preventDefault();
-                const form = e.target;
-                htmx.ajax('POST', form.action, {
-                    target: '#product-table-container',
-                    swap: 'innerHTML'
-                });
-            }
-        });
-        
-        let deletedProductTitle = '';
-        
-        //noinspection SpellCheckingInspection
-        document.body.addEventListener('htmx:beforeRequest', function(/** @type {HTMXEvent} */ event) {
-            const requestPath = event.detail?.pathInfo?.requestPath;
-            if (requestPath && requestPath.includes('/delete')) {
-                const deleteProductTitle = document.getElementById('deleteProductTitle');
-                if (deleteProductTitle) {
-                    deletedProductTitle = deleteProductTitle.textContent;
+        document.body.addEventListener('htmx:afterSwap', function (event) {
+            if (handleDeleteSuccess(event)) {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && searchInput.value) {
+                    setTimeout(function () { htmx.trigger(searchInput, 'input'); }, 100);
                 }
             }
         });
         
-        //noinspection SpellCheckingInspection
-        document.body.addEventListener('htmx:afterSwap', function(/** @type {HTMXEvent} */ event) {
-            if (event.detail?.target?.id === 'product-table-container') {
-                const requestPath = event.detail?.pathInfo?.requestPath;
-                if (event.detail?.xhr?.status === 200 && requestPath && requestPath.includes('/delete')) {
-                    const deleteDialog = document.getElementById('deleteDialog');
-                    if (deleteDialog) {
-                        deleteDialog.open = false;
-                    }
-                    
-                    if (deletedProductTitle) {
-                        const successDialog = document.getElementById('deleteSuccessDialog');
-                        if (successDialog) {
-                            document.getElementById('deletedProductTitle').textContent = deletedProductTitle;
-                            setTimeout(() => {
-                                successDialog.open = true;
-                            }, 100);
-                            deletedProductTitle = '';
-                        }
-                    }
-                    
-                    const searchInput = document.getElementById('searchInput');
-                    if (searchInput && searchInput.value) {
-                        setTimeout(() => {
-                            htmx.trigger(searchInput, 'input');
-                        }, 100);
-                    }
-                }
-            }
-        });
-    </script>
-    
-    <script>
-        /* global htmx */
-        
-        // Handle page size change
-        document.body.addEventListener('change', function(event) {
-            // Handle both native select and wa-select Web Component
-            let select = event.target;
-            
-            // If the event is from inside wa-select shadow DOM, find the wa-select element
-            if (select.tagName !== 'WA-SELECT') {
-                select = select.closest('wa-select') || document.getElementById('pageSize');
-            }
-            
-            if (!select || select.id !== 'pageSize') return;
-            
-            const sortBy = select.getAttribute('data-sort-by') || 'id';
-            const order = select.getAttribute('data-order') || 'asc';
-            const newSize = select.value;
-            const searchInput = document.getElementById('searchInput');
-            const query = searchInput ? (searchInput.value || (searchInput.shadowRoot?.querySelector('input')?.value) || '') : '';
-            const url = '/products/search?query=' + encodeURIComponent(query) + '&sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
-            
-            htmx.ajax('GET', url, {
-                target: '#product-table-container',
-                swap: 'innerHTML'
-            });
-        });
-        
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             htmx.ajax('GET', '/products/search?query=&sortBy=id&order=asc&page=0&pageSize=10', {
                 target: '#product-table-container',
                 swap: 'innerHTML'
             });
         });
+        
+        initSharedHandlers();
     </script>
 </body>
 </html>
-

@@ -5,28 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product</title>
     <!-- Web Awesome Styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/styles/webawesome.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn/styles/webawesome.css">
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.8"></script>
     <!-- Web Awesome Loader -->
     <script type="module">
-        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/webawesome.loader.js';
-        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn');
+        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn/webawesome.loader.js';
+        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn');
         startLoader();
     </script>
 </head>
 <body>
     <div class="container container-narrow">
         <header>
-            <h1>Edit Product</h1>
-            <wa-button variant="brand" href="/" class="back-button">Back to Products</wa-button>
+            <h1>
+                <wa-icon name="pen-to-square" variant="solid"></wa-icon>
+                Edit Product
+            </h1>
+            <wa-button variant="brand" href="/" class="back-button">
+                <wa-icon name="arrow-left" slot="prefix"></wa-icon>
+                Back to Products
+            </wa-button>
         </header>
+        
+        <wa-divider></wa-divider>
+        
+        <wa-alert id="error-alert" variant="danger" closable>
+            <wa-icon name="circle-exclamation" slot="icon"></wa-icon>
+            <span id="error-message">An error occurred.</span>
+        </wa-alert>
         
         <form id="updateForm" th:action="@{/products/{id}/update(id=${product.id})}" method="post">
             <div class="form-group">
-                <wa-input label="Title *" id="title" name="title" th:value="${product.title}" required></wa-input>
+                <wa-input label="Title *" id="title" name="title" th:value="${product.title}" required autofocus></wa-input>
             </div>
             <div class="form-group">
                 <wa-input label="Price" type="number" id="price" name="price" step="0.01" th:value="${product.price}"></wa-input>
@@ -35,14 +48,21 @@
                 <wa-input label="Vendor" id="vendor" name="vendor" th:value="${product.vendor}"></wa-input>
             </div>
             <div class="form-actions">
-                <wa-button type="submit" variant="success">Update Product</wa-button>
-                <wa-button variant="neutral" href="/">Cancel</wa-button>
+                <wa-button type="submit" variant="success">
+                    <wa-icon name="floppy-disk" slot="prefix"></wa-icon>
+                    Update Product
+                </wa-button>
+                <wa-button variant="neutral" href="/">
+                    <wa-icon name="xmark" slot="prefix"></wa-icon>
+                    Cancel
+                </wa-button>
             </div>
         </form>
     </div>
     
-    <wa-dialog label="Success" id="updateSuccessDialog">
+    <wa-dialog label="Success" id="updateSuccessDialog" style="--width: 420px;">
         <div class="dialog-margin">
+            <wa-icon name="circle-check" variant="solid" class="success-icon"></wa-icon>
             <p>Product "<span id="updatedProductTitle"></span>" has been updated successfully.</p>
         </div>
         <wa-button slot="footer" variant="brand" data-dialog="close" onclick="closeUpdateSuccessDialog()">OK</wa-button>
@@ -54,31 +74,41 @@
             window.location.href = '/';
         }
         
-        document.getElementById('updateForm').addEventListener('submit', function(e) {
+        function showError(message) {
+            var alert = document.getElementById('error-alert');
+            document.getElementById('error-message').textContent = message;
+            alert.open = true;
+        }
+        
+        document.getElementById('updateForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            const form = e.target;
-            const formData = new FormData(form);
-            const titleValue = formData.get('title');
-            const updatedTitle = typeof titleValue === 'string' ? titleValue : '';
+            var form = e.target;
+
+            var titleInput = document.getElementById('title');
+            var title = titleInput ? (titleInput.value || '') : '';
+            if (!title.trim()) {
+                if (titleInput) titleInput.focus();
+                return;
+            }
+
+            var formData = new FormData(form);
             
             fetch(form.action, {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
+            .then(function (response) {
                 if (response.ok) {
-                    document.getElementById('updatedProductTitle').textContent = updatedTitle;
+                    document.getElementById('updatedProductTitle').textContent = title;
                     document.getElementById('updateSuccessDialog').open = true;
                 } else {
-                    alert('Failed to update product. Please try again.');
+                    showError('Failed to update product. Please try again.');
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while updating the product.');
+            .catch(function () {
+                showError('An error occurred while updating the product.');
             });
         });
     </script>
 </body>
 </html>
-

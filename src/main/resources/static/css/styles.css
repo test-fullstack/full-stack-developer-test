@@ -18,9 +18,7 @@ body {
 }
 
 header {
-    margin-bottom: var(--wa-space-l);
-    padding-bottom: var(--wa-space-m);
-    border-bottom: var(--wa-border-width-m) var(--wa-border-style) var(--wa-color-surface-border);
+    margin-bottom: var(--wa-space-m);
 }
 
 .header-content {
@@ -37,6 +35,18 @@ header {
 h1 {
     margin: 0;
     color: var(--wa-color-text-normal);
+    display: flex;
+    align-items: center;
+    gap: var(--wa-space-s);
+}
+
+h1 wa-icon {
+    font-size: var(--wa-font-size-x-large);
+    color: var(--wa-color-brand-fill-loud);
+}
+
+wa-divider {
+    --spacing: var(--wa-space-m);
 }
 
 .search-box {
@@ -108,7 +118,7 @@ tr:hover {
 
 .actions-cell {
     display: flex;
-    gap: var(--wa-space-m);
+    gap: var(--wa-space-s);
     align-items: center;
 }
 
@@ -121,7 +131,7 @@ tr:hover {
 
 .pagination-controls {
     display: flex;
-    gap: var(--wa-space-m);
+    gap: var(--wa-space-s);
     align-items: center;
 }
 
@@ -142,6 +152,23 @@ tr:hover {
     margin-bottom: var(--wa-space-m);
 }
 
+/* Success icon in dialogs */
+.success-icon {
+    font-size: var(--wa-font-size-2x-large);
+    color: var(--wa-color-success-fill-loud);
+    display: block;
+    margin-bottom: var(--wa-space-s);
+}
+
+/* Error alert on edit page */
+wa-alert#error-alert {
+    margin-bottom: var(--wa-space-l);
+}
+
+wa-alert#error-alert:not([open]) {
+    display: none;
+}
+
 /* Form styling inside dialog */
 wa-dialog form .form-group {
     margin-bottom: var(--wa-space-m);
@@ -151,3 +178,35 @@ wa-dialog form .form-group:last-of-type {
     margin-bottom: 0;
 }
 
+/* Loading overlay with wa-spinner */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9998;
+    justify-content: center;
+    align-items: center;
+    background: var(--wa-color-overlay-modal);
+}
+
+body.htmx-request .loading-overlay {
+    display: flex;
+}
+
+.loading-overlay wa-spinner {
+    font-size: var(--wa-font-size-3x-large);
+    --track-width: 4px;
+    --indicator-color: var(--wa-color-brand-fill-loud);
+}
+
+#product-table-container {
+    transition: opacity 200ms ease-in;
+}
+
+body.htmx-request #product-table-container {
+    opacity: 0.5;
+    pointer-events: none;
+}

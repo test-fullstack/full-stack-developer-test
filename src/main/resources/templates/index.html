@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products</title>
     <!-- Web Awesome Styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/styles/webawesome.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn/styles/webawesome.css">
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.8"></script>
     <!-- Web Awesome Loader -->
     <script type="module">
-        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn/webawesome.loader.js';
-        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@latest/dist-cdn');
+        import { setBasePath, startLoader } from 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn/webawesome.loader.js';
+        setBasePath('https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.2.1/dist-cdn');
         startLoader();
     </script>
 </head>
@@ -21,7 +21,10 @@
     <div class="container">
         <header>
             <div class="header-content">
-            <h1>Products</h1>
+                <h1>
+                    <wa-icon name="box-open" variant="solid"></wa-icon>
+                    Products
+                </h1>
                 <div id="total-count-container" 
                      class="total-count"
                      hx-get="/products/total-count" 
@@ -32,14 +35,19 @@
             </div>
         </header>
         
+        <wa-divider></wa-divider>
+        
         <div class="button-group">
             <wa-button variant="brand" id="load-products-btn" hx-post="/products/load" hx-target="#product-table-container" hx-swap="innerHTML">
+                <wa-icon name="download" slot="prefix"></wa-icon>
                 Load Products
             </wa-button>
-            <wa-button variant="brand" id="open-add-product-dialog-btn" onclick="openAddProductDialog()">
+            <wa-button variant="brand" data-dialog="open addProductDialog">
+                <wa-icon name="plus" slot="prefix"></wa-icon>
                 Add New Product
             </wa-button>
             <wa-button variant="brand" href="/search">
+                <wa-icon name="magnifying-glass" slot="prefix"></wa-icon>
                 Search Products
             </wa-button>
         </div>
@@ -47,80 +55,73 @@
         <div id="product-table-container"></div>
     </div>
     
-    <wa-dialog label="Add New Product" id="addProductDialog">
+    <div class="loading-overlay">
+        <wa-spinner></wa-spinner>
+    </div>
+    
+    <wa-dialog label="Add New Product" id="addProductDialog" style="--width: 480px;">
         <form id="add-product-form" 
               method="post"
               action="/products?sortBy=id&order=asc&page=0&pageSize=10">
-                    <div class="form-group">
-                <wa-input label="Title *" id="add-product-title" name="title" required></wa-input>
-                    </div>
-                    <div class="form-group">
+            <div class="form-group">
+                <wa-input label="Title *" id="add-product-title" name="title" required autofocus></wa-input>
+            </div>
+            <div class="form-group">
                 <wa-input label="Price" type="number" id="add-product-price" name="price" step="0.01"></wa-input>
-                    </div>
-                    <div class="form-group">
+            </div>
+            <div class="form-group">
                 <wa-input label="Vendor" id="add-product-vendor" name="vendor"></wa-input>
-                    </div>
-                </form>
-        <wa-button slot="footer" variant="neutral" data-dialog="close">Cancel</wa-button>
-        <wa-button slot="footer" variant="brand" id="submit-add-product-btn" onclick="submitAddProductForm()">Add Product</wa-button>
+            </div>
+        </form>
+        <wa-button slot="footer" variant="neutral" data-dialog="close">
+            <wa-icon name="xmark" slot="prefix"></wa-icon>
+            Cancel
+        </wa-button>
+        <wa-button slot="footer" variant="brand" id="submit-add-product-btn" onclick="submitAddProductForm()">
+            <wa-icon name="check" slot="prefix"></wa-icon>
+            Add Product
+        </wa-button>
     </wa-dialog>
     
-    <wa-dialog label="Success" id="deleteSuccessDialog">
+    <wa-dialog label="Delete Product" id="deleteDialog" style="--width: 420px;">
         <div class="dialog-margin">
+            <p>Are you sure you want to delete "<span id="deleteProductTitle"></span>"?</p>
+            <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <form id="deleteForm" method="post" style="display: none;"></form>
+        <wa-button slot="footer" variant="neutral" data-dialog="close">
+            <wa-icon name="xmark" slot="prefix"></wa-icon>
+            Cancel
+        </wa-button>
+        <wa-button slot="footer" variant="danger" onclick="document.getElementById('deleteForm').requestSubmit()">
+            <wa-icon name="trash-can" slot="prefix"></wa-icon>
+            Delete
+        </wa-button>
+    </wa-dialog>
+    
+    <wa-dialog label="Success" id="deleteSuccessDialog" style="--width: 420px;">
+        <div class="dialog-margin">
+            <wa-icon name="circle-check" variant="solid" class="success-icon"></wa-icon>
             <p>Product "<span id="deletedProductTitle"></span>" has been deleted successfully.</p>
         </div>
         <wa-button slot="footer" variant="brand" data-dialog="close">OK</wa-button>
     </wa-dialog>
     
+    <script src="/js/shared.js"></script>
     <script>
-        function openAddProductDialog() {
-            const dialog = document.getElementById('addProductDialog');
-            if (dialog) {
-                dialog.open = true;
-                setTimeout(() => {
-                    const form = document.getElementById('add-product-form');
-                    if (form) {
-                        const waInputs = form.querySelectorAll('wa-input');
-                        waInputs.forEach(waInput => {
-                            ['input', 'change', 'blur', 'focus', 'keyup', 'keydown'].forEach(eventType => {
-                                waInput.addEventListener(eventType, function(e) {
-                                    e.stopPropagation();
-                                }, true);
-                                
-                                if (waInput.shadowRoot) {
-                                    const nativeInput = waInput.shadowRoot.querySelector('input');
-                                    if (nativeInput) {
-                                        nativeInput.addEventListener(eventType, function(e) {
-                                            e.stopPropagation();
-                                        }, true);
-                                    }
-                                }
-                            });
-                        });
-                    }
-                }, 100);
-            }
-        }
+        let isAddingProduct = false;
         
         function closeAddProductDialog() {
             const dialog = document.getElementById('addProductDialog');
-            if (dialog) {
-                dialog.open = false;
-            }
+            if (dialog) dialog.open = false;
         }
         
         function resetAddProductForm() {
             const form = document.getElementById('add-product-form');
             if (form) {
                 form.reset();
-                const waInputs = form.querySelectorAll('wa-input');
-                waInputs.forEach(input => {
-                    if (input.shadowRoot) {
-                        const nativeInput = input.shadowRoot.querySelector('input');
-                        if (nativeInput) {
-                            nativeInput.value = '';
-                        }
-                    }
+                form.querySelectorAll('wa-input').forEach(function (input) {
+                    input.value = '';
                 });
             }
         }
@@ -130,18 +131,10 @@
             if (!form) return;
             
             const titleInput = document.getElementById('add-product-title');
-            let title = '';
-            if (titleInput && titleInput.shadowRoot) {
-                const nativeInput = titleInput.shadowRoot.querySelector('input');
-                if (nativeInput) {
-                    title = nativeInput.value || '';
-                }
-            }
+            const title = titleInput ? (titleInput.value || '') : '';
             
-            if (!title || title.trim() === '') {
-                if (titleInput) {
-                    titleInput.focus();
-            }
+            if (!title.trim()) {
+                if (titleInput) titleInput.focus();
                 return;
             }
             
@@ -152,8 +145,8 @@
                 swap: 'innerHTML',
                 values: {
                     title: title,
-                    price: getInputValue('add-product-price'),
-                    vendor: getInputValue('add-product-vendor'),
+                    price: document.getElementById('add-product-price').value || '',
+                    vendor: document.getElementById('add-product-vendor').value || '',
                     sortBy: 'id',
                     order: 'asc',
                     page: '0',
@@ -162,31 +155,7 @@
             });
         }
         
-        function getInputValue(inputId) {
-            const input = document.getElementById(inputId);
-            if (input && input.shadowRoot) {
-                const nativeInput = input.shadowRoot.querySelector('input');
-                if (nativeInput) {
-                    return nativeInput.value || '';
-                }
-            }
-            return '';
-        }
-        
-        let deletedProductTitle = '';
-        let isAddingProduct = false;
-        
-        document.body.addEventListener('htmx:beforeRequest', function(event) {
-            const requestPath = event.detail?.pathInfo?.requestPath;
-            if (requestPath && requestPath.includes('/delete')) {
-                const deleteProductTitle = document.getElementById('deleteProductTitle');
-                if (deleteProductTitle) {
-                    deletedProductTitle = deleteProductTitle.textContent;
-                }
-            }
-        });
-        
-        document.addEventListener('htmx:configRequest', function(event) {
+        document.addEventListener('htmx:configRequest', function (event) {
             const requestPath = event.detail?.pathInfo?.requestPath;
             const triggerElement = event.detail?.elt;
             
@@ -214,56 +183,18 @@
             }
         });
         
-        document.body.addEventListener('htmx:afterSwap', function(event) {
+        document.body.addEventListener('htmx:afterSwap', function (event) {
             if (event.detail?.target?.id === 'product-table-container') {
-                const requestPath = event.detail?.pathInfo?.requestPath;
-                
                 if (isAddingProduct && event.detail?.xhr?.status === 200) {
                     resetAddProductForm();
                     closeAddProductDialog();
                     isAddingProduct = false;
                 }
-                
-                if (event.detail?.xhr?.status === 200 && requestPath && requestPath.includes('/delete')) {
-                    const deleteDialog = document.getElementById('deleteDialog');
-                    if (deleteDialog) {
-                        deleteDialog.open = false;
-                    }
-                    
-                    if (deletedProductTitle) {
-                        const successDialog = document.getElementById('deleteSuccessDialog');
-                        if (successDialog) {
-                            document.getElementById('deletedProductTitle').textContent = deletedProductTitle;
-                            setTimeout(() => {
-                                successDialog.open = true;
-                            }, 100);
-                            deletedProductTitle = '';
-                        }
-                    }
-                }
+                handleDeleteSuccess(event);
             }
         });
         
-        document.body.addEventListener('change', function(event) {
-            let select = event.target;
-            
-            if (select.tagName !== 'WA-SELECT') {
-                select = select.closest('wa-select') || document.getElementById('pageSize');
-            }
-            
-            if (!select || select.id !== 'pageSize') return;
-            
-            const sortBy = select.getAttribute('data-sort-by') || 'id';
-            const order = select.getAttribute('data-order') || 'asc';
-            const newSize = select.value;
-            const url = '/products?sortBy=' + encodeURIComponent(sortBy) + '&order=' + encodeURIComponent(order) + '&page=0&pageSize=' + encodeURIComponent(newSize);
-            
-            htmx.ajax('GET', url, {
-                target: '#product-table-container',
-                swap: 'innerHTML'
-            });
-        });
-        
+        initSharedHandlers();
     </script>
 </body>
 </html>
